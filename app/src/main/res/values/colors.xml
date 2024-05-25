@@ -7,4 +7,9 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="bottom_nav_item_color">#00BCD4</color> <!-- Couleur pour les icônes actif -->
+    <color name="bottom_nav_item_inactive_color">#A2A2A2</color> <!-- Couleur pour les icônes et texte inactifs -->
+    <color name="orange">#FFA500</color>
+    <color name="light_gray">#D3D3D3</color>
+    <color name="text_color">#000000</color>
 </resources>

@@ -1,7 +1,9 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    id("org.sonarqube") version "5.0.0.4638"
 }
+
 
 android {
     namespace = "com.example.projet42_androidapp"
@@ -47,6 +49,23 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    lint {
+        xmlReport = true
+        xmlOutput = file("build/reports/lint-results.xml")
+    }
+
+    sonarqube {
+        properties {
+            property("sonar.projectKey", "projet42_androidapp")
+            property("sonar.organization", "projet42")
+            property("sonar.host.url", "https://sonarcloud.io")
+        }
+    }
+}
+
+tasks.sonarqube {
+    dependsOn(tasks.check)
 }
 
 dependencies {
@@ -58,7 +77,9 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
+    implementation("androidx.compose.material:material:1.6.7")
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.navigation.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
