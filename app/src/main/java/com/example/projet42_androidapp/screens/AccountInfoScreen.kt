@@ -2,147 +2,179 @@ package com.example.projet42_androidapp.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.projet42_androidapp.R
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projet42_androidapp.viewmodel.AccountViewModel
 
 @Composable
-fun RegisterScreen(onRegisterClick: () -> Unit, onLoginClick: () -> Unit) {
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+fun AccountInfoScreen(
+    viewModel: AccountViewModel = viewModel(),
+    onLogoutClick: () -> Unit,
+    onEditInfoClick: () -> Unit,
+    onViewEventsClick: () -> Unit,
+    onDeleteAccountClick: () -> Unit
+) {
+    val userFirstName by viewModel.userFirstName
+    val userLastName by viewModel.userLastName
+    val userEmail by viewModel.userEmail
+    val userPassword by viewModel.userPassword
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 brush = Brush.linearGradient(
-                    colors = listOf(Color(0xFF6650a4), Color(0xFF3700B3)),
+                    colors = listOf(Color(0xFF3700B3), Color(0xFF6650a4)),
                     tileMode = TileMode.Clamp
                 )
-            ),
+            )
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Heureux de vous rencontrer !", fontSize = 24.sp, color = Color.White)
+        Text(text = "Bienvenue $userFirstName $userLastName !", fontSize = 24.sp, color = Color.White)
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Box(
-            modifier = Modifier.padding(16.dp) // simulate margin
+            modifier = Modifier.padding(16.dp)
         ) {
             Box(
                 modifier = Modifier
                     .background(Color.White, shape = RoundedCornerShape(25.dp))
                     .padding(16.dp)
             ) {
-                Column {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     TextField(
-                        value = firstName,
-                        onValueChange = { firstName = it },
+                        value = userFirstName,
+                        onValueChange = {},
                         label = { Text("Nom") },
                         leadingIcon = {
-                            Icon(painter = painterResource(id = R.drawable.baseline_person_24), contentDescription = null)
+                            Icon(Icons.Default.Person, contentDescription = null)
                         },
                         colors = TextFieldDefaults.textFieldColors(
                             backgroundColor = Color.White,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = false
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     TextField(
-                        value = lastName,
-                        onValueChange = { lastName = it },
+                        value = userLastName,
+                        onValueChange = {},
                         label = { Text("Prénom") },
                         leadingIcon = {
-                            Icon(painter = painterResource(id = R.drawable.baseline_person_24), contentDescription = null)
+                            Icon(Icons.Default.Person, contentDescription = null)
                         },
                         colors = TextFieldDefaults.textFieldColors(
                             backgroundColor = Color.White,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = false
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    Button(
+                        onClick = onEditInfoClick,
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF9C27B0)),
+                        shape = RoundedCornerShape(25.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(text = "Modifier mes informations", color = Color.White)
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     TextField(
-                        value = email,
-                        onValueChange = { email = it },
+                        value = userEmail,
+                        onValueChange = {},
                         label = { Text("Email") },
                         leadingIcon = {
-                            Icon(painter = painterResource(id = R.drawable.baseline_email_24), contentDescription = null)
+                            Icon(Icons.Default.Email, contentDescription = null)
                         },
                         colors = TextFieldDefaults.textFieldColors(
                             backgroundColor = Color.White,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = false
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     TextField(
-                        value = password,
-                        onValueChange = { password = it },
+                        value = userPassword,
+                        onValueChange = {},
                         label = { Text("Mot de passe") },
                         leadingIcon = {
-                            Icon(painter = painterResource(id = R.drawable.baseline_key_24), contentDescription = null)
+                            Icon(Icons.Default.Lock, contentDescription = null)
                         },
                         visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         colors = TextFieldDefaults.textFieldColors(
                             backgroundColor = Color.White,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = false
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
-                        onClick = onRegisterClick,
+                        onClick = onViewEventsClick,
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF9C27B0)),
                         shape = RoundedCornerShape(25.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(text = "Inscription", color = Color.White)
+                        Text(text = "Événements notés", color = Color.White)
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
-
-
-                    Text(text = "Déjà un compte ?", color = Color.Gray, fontSize = 12.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
-
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
-                        onClick = onLoginClick,
+                        onClick = onLogoutClick,
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF9C27B0)),
+                        shape = RoundedCornerShape(25.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(text = "Déconnexion", color = Color.White)
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = onDeleteAccountClick,
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFFFA500)),
                         shape = RoundedCornerShape(25.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(text = "Connexion", color = Color.White)
+                        Text(text = "Supprimer mon compte", color = Color.White)
                     }
                 }
             }

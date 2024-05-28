@@ -8,7 +8,9 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -24,7 +26,12 @@ fun LoginScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF3700B3)),
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(Color(0xFF6650a4), Color(0xFF3700B3)),
+                    tileMode = TileMode.Clamp
+                )
+            ),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -95,9 +102,9 @@ fun LoginScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
                         Text(text = "Connexion", color = Color.White)
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(18.dp))
 
-                    Text(text = "Toujours pas de compte ?", color = Color.Gray, fontSize = 12.sp)
+                    Text(text = "Toujours pas de compte ?", color = Color.Gray, fontSize = 12.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
 
                     Spacer(modifier = Modifier.height(8.dp))
 

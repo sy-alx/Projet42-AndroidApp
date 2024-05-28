@@ -1,6 +1,5 @@
 package com.example.projet42_androidapp.screens
 
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projet42_androidapp.viewmodel.AccountViewModel
@@ -8,17 +7,22 @@ import com.example.projet42_androidapp.viewmodel.AccountViewModel
 @Composable
 fun AccountScreen(viewModel: AccountViewModel = viewModel()) {
     if (viewModel.isUserLoggedIn.value) {
-        // Afficher les informations du compte de l'utilisateur
-        Text(text = "User Account Information")
+        AccountInfoScreen(
+            viewModel = viewModel,
+            onLogoutClick = { viewModel.isUserLoggedIn.value = false },
+            onEditInfoClick = { /* Ajouter la logique de modification des informations ici */ },
+            onViewEventsClick = { /* Ajouter la logique de visualisation des événements notés ici */ },
+            onDeleteAccountClick = { viewModel.isUserLoggedIn.value = false }
+        )
     } else {
         if (viewModel.showLoginForm.value) {
             LoginScreen(
-                onLoginClick = { /* Ajouter la logique de connexion ici */ },
+                onLoginClick = { viewModel.isUserLoggedIn.value = true },
                 onRegisterClick = { viewModel.showLoginForm.value = false }
             )
         } else {
             RegisterScreen(
-                onRegisterClick = { /* Ajouter la logique d'inscription ici */ },
+                onRegisterClick = { viewModel.isUserLoggedIn.value = true },
                 onLoginClick = { viewModel.showLoginForm.value = true }
             )
         }
