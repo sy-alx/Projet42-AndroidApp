@@ -1,16 +1,30 @@
 package com.example.projet42_androidapp.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,12 +39,20 @@ import com.example.projet42_androidapp.viewmodel.AccountViewModel
 
 @Composable
 fun AccountInfoScreen(
+    token: String? = null,
     viewModel: AccountViewModel = viewModel(),
     onLogoutClick: () -> Unit,
     onEditInfoClick: () -> Unit,
     onViewEventsClick: () -> Unit,
     onDeleteAccountClick: () -> Unit
 ) {
+    LaunchedEffect(token) {
+        token?.let {
+            Log.d("AccountInfoScreen", "Fetching user info with token: $it")
+            viewModel.fetchUserInfo(it)
+        }
+    }
+
     val userFirstName by viewModel.userFirstName
     val userLastName by viewModel.userLastName
     val userEmail by viewModel.userEmail
@@ -181,3 +203,5 @@ fun AccountInfoScreen(
         }
     }
 }
+
+

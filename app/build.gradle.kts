@@ -16,6 +16,8 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        manifestPlaceholders["appAuthRedirectScheme"] = "projet42"
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -80,6 +82,11 @@ dependencies {
     implementation("androidx.compose.material:material:1.6.7")
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
+
+    implementation ("net.openid:appauth:0.10.0")
+    implementation ("com.google.code.gson:gson:2.8.6")
+    implementation("com.squareup.okhttp3:okhttp:4.9.1")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -87,4 +94,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
 }

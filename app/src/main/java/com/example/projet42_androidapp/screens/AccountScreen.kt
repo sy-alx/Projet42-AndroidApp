@@ -1,12 +1,13 @@
 package com.example.projet42_androidapp.screens
 
+import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projet42_androidapp.viewmodel.AccountViewModel
 
 @Composable
-fun AccountScreen(viewModel: AccountViewModel = viewModel()) {
-    if (viewModel.isUserLoggedIn.value) {
+fun AccountScreen(viewModel: AccountViewModel = viewModel(), context: Context) {
+    if (viewModel.isUserLoggedIn.value == true) {
         AccountInfoScreen(
             viewModel = viewModel,
             onLogoutClick = { viewModel.isUserLoggedIn.value = false },
@@ -15,9 +16,13 @@ fun AccountScreen(viewModel: AccountViewModel = viewModel()) {
             onDeleteAccountClick = { viewModel.isUserLoggedIn.value = false }
         )
     } else {
-        if (viewModel.showLoginForm.value) {
+        if (viewModel.showLoginForm.value == true) {
             LoginScreen(
-                onLoginClick = { viewModel.isUserLoggedIn.value = true },
+                context = context,
+                onLoginSuccess = { token ->
+                    viewModel.isUserLoggedIn.value = true
+                    // Stockez le token ou utilisez-le pour les requêtes API
+                },
                 onRegisterClick = { viewModel.showLoginForm.value = false }
             )
         } else {
