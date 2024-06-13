@@ -1,8 +1,10 @@
 package com.example.projet42_androidapp
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,6 +42,11 @@ import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import net.openid.appauth.AuthorizationService
 import net.openid.appauth.AuthorizationServiceConfiguration
+import okhttp3.FormBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import java.io.IOException
 
 class MainActivity : ComponentActivity() {
     private lateinit var authService: AuthorizationService
@@ -89,8 +96,8 @@ class MainActivity : ComponentActivity() {
                     ) { tokenResponse, exception ->
                         if (tokenResponse != null) {
                             val accessToken = tokenResponse.accessToken
-                            // Passez le token à l'écran AccountInfo
-                            navController.navigate("account/${accessToken}")
+                            val refreshToken = tokenResponse.refreshToken
+                            navController.navigate("account/${accessToken}/${refreshToken}")
                         } else {
                             // Gérer l'erreur
                             exception?.printStackTrace()
@@ -106,6 +113,46 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    fun logout(context: Context, token: String, refreshToken: String, onSuccess: () -> Unit, onError: () -> Unit) {
+        val url = "http://192.168.1.29:8090/realms/projet42-realm/protocol/openid-connect/logout"
+
+        val client = OkHttpClient()
+        val body = FormBody.Builder()
+            .add("client_id", "projet42-api")
+            .add("client_secret", "UjttrpYWQb78I0wVtlxTc3bHJnDM0zqc")
+            .add("refresh_token", refreshToken)
+            .build()
+
+        val request = Request.Builder()
+            .url(url)
+            .post(body)
+            .addHeader("Authorization", "Bearer $token")
+            .build()
+
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                e.printStackTrace()
+                (context as MainActivity).runOnUiThread {
+                    onError()
+                }
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: Response) {
+                if (!response.isSuccessful) {
+                    Log.e("MainActivity", "Failed to logout: ${response.code}")
+                    (context as MainActivity).runOnUiThread {
+                        onError()
+                    }
+                } else {
+                    (context as MainActivity).runOnUiThread {
+                        onSuccess()
+                    }
+                }
+            }
+        })
+    }
+
 
 
 
@@ -165,15 +212,16 @@ fun NavHostContainer(navController: NavHostController, modifier: Modifier = Modi
             val accountViewModel: AccountViewModel = viewModel()
             AccountScreen(viewModel = accountViewModel, context = context)
         }
-        composable("account/{token}") { backStackEntry ->
+        composable("account/{token}/{refreshToken}") { backStackEntry ->
             val token = backStackEntry.arguments?.getString("token")
+            val refreshToken = backStackEntry.arguments?.getString("refreshToken")
             AccountInfoScreen(
                 token = token,
+                refreshToken = refreshToken,
                 onDeleteAccountClick = { /* Ajouter la logique pour supprimer le compte */ },
                 onEditInfoClick = { /* Ajouter la logique pour éditer les infos */ },
                 onLogoutClick = {
                     /* Ajouter la logique pour déconnecter */
-                    // Exemple :
                     navController.navigate(BottomNavItem.Home.route) {
                         popUpTo(navController.graph.startDestinationId) { inclusive = true }
                     }
@@ -181,6 +229,7 @@ fun NavHostContainer(navController: NavHostController, modifier: Modifier = Modi
                 onViewEventsClick = { /* Ajouter la logique pour visualiser les événements */ }
             )
         }
+
     }
 }
 

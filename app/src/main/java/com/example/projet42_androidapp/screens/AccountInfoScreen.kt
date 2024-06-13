@@ -31,21 +31,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projet42_androidapp.utils.AuthConfig
 import com.example.projet42_androidapp.viewmodel.AccountViewModel
+
 
 @Composable
 fun AccountInfoScreen(
     token: String? = null,
+    refreshToken: String? = null,
     viewModel: AccountViewModel = viewModel(),
     onLogoutClick: () -> Unit,
     onEditInfoClick: () -> Unit,
     onViewEventsClick: () -> Unit,
     onDeleteAccountClick: () -> Unit
 ) {
+    val context = LocalContext.current
+
     LaunchedEffect(token) {
         token?.let {
             Log.d("AccountInfoScreen", "Fetching user info with token: $it")
@@ -180,7 +186,23 @@ fun AccountInfoScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
-                        onClick = onLogoutClick,
+                        onClick = {
+                            if (token != null && refreshToken != null) {
+                                AuthConfig.logout(
+                                    context = context,
+                                    token = token,
+                                    refreshToken = refreshToken,
+                                    onSuccess = {
+                                        viewModel.isUserLoggedIn.value = false
+                                        onLogoutClick()
+                                    },
+                                    onError = {
+                                        // Gérer l'erreur
+                                        Log.e("AccountInfoScreen", "Failed to logout")
+                                    }
+                                )
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF9C27B0)),
                         shape = RoundedCornerShape(25.dp),
                         modifier = Modifier.fillMaxWidth()
