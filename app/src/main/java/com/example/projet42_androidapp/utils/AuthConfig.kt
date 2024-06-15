@@ -34,7 +34,8 @@ object AuthConfig {
             CLIENT_ID,
             ResponseTypeValues.CODE,
             Uri.parse(REDIRECT_URI)
-        ).setScopes("openid", "profile", "email")
+        ).setScopes("email", "profile")
+            .setAdditionalParameters(mapOf("audience" to "projet42-api"))
             .build()
     }
 
@@ -84,4 +85,5 @@ object AuthConfig {
             }
         })
     }
+
 }

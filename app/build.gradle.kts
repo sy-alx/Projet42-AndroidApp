@@ -85,7 +85,10 @@ dependencies {
 
     implementation ("net.openid:appauth:0.10.0")
     implementation ("com.google.code.gson:gson:2.8.6")
-    implementation("com.squareup.okhttp3:okhttp:4.9.1")
+    implementation ("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation ("com.auth0:java-jwt:4.4.0")
+    implementation ("com.nimbusds:nimbus-jose-jwt:9.15")
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

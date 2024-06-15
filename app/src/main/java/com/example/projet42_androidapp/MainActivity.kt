@@ -1,8 +1,6 @@
 package com.example.projet42_androidapp
 
-import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -41,13 +39,8 @@ import net.openid.appauth.AppAuthConfiguration
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import net.openid.appauth.AuthorizationService
-import net.openid.appauth.AuthorizationServiceConfiguration
-import okhttp3.FormBody
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import java.io.IOException
 
+@Suppress("DEPRECATION")
 class MainActivity : ComponentActivity() {
     private lateinit var authService: AuthorizationService
     private lateinit var navController: NavHostController
@@ -55,13 +48,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Configuration du service d'autorisation
-        val serviceConfiguration = AuthorizationServiceConfiguration(
-            Uri.parse("http://192.168.1.29:8090/realms/projet42-realm/protocol/openid-connect/auth"),
-            Uri.parse("http://192.168.1.29:8090/realms/projet42-realm/protocol/openid-connect/token")
-        )
-
-        // Configuration AppAuth avec CustomConnectionBuilder
         val appAuthConfig = AppAuthConfiguration.Builder()
             .setConnectionBuilder(CustomConnectionBuilder)
             .build()
@@ -79,81 +65,56 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        // Démarrer le flux d'autorisation
+        startAuthorization()
     }
 
+    // Inside your MainActivity or wherever you are using VerifyTokenTask
+    private fun startAuthorization() {
+        val authRequest = AuthConfig.createAuthRequest(this)
+        val authService = AuthConfig.createAuthService(this)
+
+        val intent = authService.getAuthorizationRequestIntent(authRequest)
+        startActivityForResult(intent, RC_AUTH)
+    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == RC_AUTH) {
-            if (data != null) {
-                val resp = AuthorizationResponse.fromIntent(data)
-                val ex = AuthorizationException.fromIntent(data)
-                if (resp != null) {
-                    val clientAuth = AuthConfig.createClientAuthentication()
-                    authService.performTokenRequest(
-                        resp.createTokenExchangeRequest(),
-                        clientAuth // Ajoutez l'authentification du client ici
-                    ) { tokenResponse, exception ->
-                        if (tokenResponse != null) {
-                            val accessToken = tokenResponse.accessToken
-                            val refreshToken = tokenResponse.refreshToken
-                            navController.navigate("account/${accessToken}/${refreshToken}")
-                        } else {
-                            // Gérer l'erreur
-                            exception?.printStackTrace()
+            val resp = AuthorizationResponse.fromIntent(data!!)
+            val ex = AuthorizationException.fromIntent(data)
+            if (resp != null) {
+                val clientAuth = AuthConfig.createClientAuthentication()
+                authService.performTokenRequest(
+                    resp.createTokenExchangeRequest(),
+                    clientAuth
+                ) { tokenResponse, exception ->
+                    if (tokenResponse != null) {
+                        val accessToken = tokenResponse.accessToken
+                        val refreshToken = tokenResponse.refreshToken
+                        Log.d("AuthToken", "Access Token: $accessToken")
+
+                        // Verify the token signature
+                        accessToken?.let { token ->
+                            VerifyTokenTask(token) { isTokenValid, validatedToken ->
+                                if (isTokenValid) {
+                                    Log.d("AuthToken", "Token is valid: $validatedToken")
+                                    navController.navigate("account/${accessToken}/${refreshToken}")
+                                } else {
+                                    Log.e("AuthToken", "Invalid token signature")
+                                }
+                            }.execute()
                         }
+                    } else {
+                        exception?.printStackTrace()
                     }
-                } else {
-                    // Auth failed
-                    ex?.printStackTrace()
                 }
             } else {
-                // Log une erreur appropriée si data est null
-                println("Data intent is null")
+                ex?.printStackTrace()
             }
         }
     }
-
-    fun logout(context: Context, token: String, refreshToken: String, onSuccess: () -> Unit, onError: () -> Unit) {
-        val url = "http://192.168.1.29:8090/realms/projet42-realm/protocol/openid-connect/logout"
-
-        val client = OkHttpClient()
-        val body = FormBody.Builder()
-            .add("client_id", "projet42-api")
-            .add("client_secret", "UjttrpYWQb78I0wVtlxTc3bHJnDM0zqc")
-            .add("refresh_token", refreshToken)
-            .build()
-
-        val request = Request.Builder()
-            .url(url)
-            .post(body)
-            .addHeader("Authorization", "Bearer $token")
-            .build()
-
-        client.newCall(request).enqueue(object : okhttp3.Callback {
-            override fun onFailure(call: okhttp3.Call, e: IOException) {
-                e.printStackTrace()
-                (context as MainActivity).runOnUiThread {
-                    onError()
-                }
-            }
-
-            override fun onResponse(call: okhttp3.Call, response: Response) {
-                if (!response.isSuccessful) {
-                    Log.e("MainActivity", "Failed to logout: ${response.code}")
-                    (context as MainActivity).runOnUiThread {
-                        onError()
-                    }
-                } else {
-                    (context as MainActivity).runOnUiThread {
-                        onSuccess()
-                    }
-                }
-            }
-        })
-    }
-
-
 
 
     companion object {
@@ -221,7 +182,6 @@ fun NavHostContainer(navController: NavHostController, modifier: Modifier = Modi
                 onDeleteAccountClick = { /* Ajouter la logique pour supprimer le compte */ },
                 onEditInfoClick = { /* Ajouter la logique pour éditer les infos */ },
                 onLogoutClick = {
-                    /* Ajouter la logique pour déconnecter */
                     navController.navigate(BottomNavItem.Home.route) {
                         popUpTo(navController.graph.startDestinationId) { inclusive = true }
                     }
@@ -229,7 +189,6 @@ fun NavHostContainer(navController: NavHostController, modifier: Modifier = Modi
                 onViewEventsClick = { /* Ajouter la logique pour visualiser les événements */ }
             )
         }
-
     }
 }
 
