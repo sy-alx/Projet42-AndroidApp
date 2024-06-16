@@ -66,8 +66,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Démarrer le flux d'autorisation
-        startAuthorization()
     }
 
     // Inside your MainActivity or wherever you are using VerifyTokenTask

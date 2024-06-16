@@ -11,7 +11,7 @@ fun AccountScreen(viewModel: AccountViewModel = viewModel(), context: Context) {
         AccountInfoScreen(
             viewModel = viewModel,
             onLogoutClick = { viewModel.isUserLoggedIn.value = false },
-            onEditInfoClick = { /* Ajouter la logique de modification des informations ici */ },
+            onEditInfoClick = { viewModel.toggleEditMode() },
             onViewEventsClick = { /* Ajouter la logique de visualisation des événements notés ici */ },
             onDeleteAccountClick = { viewModel.isUserLoggedIn.value = false }
         )
@@ -33,3 +33,4 @@ fun AccountScreen(viewModel: AccountViewModel = viewModel(), context: Context) {
         }
     }
 }
+

@@ -2,6 +2,7 @@ package com.example.projet42_androidapp.screens
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
@@ -26,6 +28,9 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -39,7 +44,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projet42_androidapp.utils.AuthConfig
 import com.example.projet42_androidapp.viewmodel.AccountViewModel
 
-
 @Composable
 fun AccountInfoScreen(
     token: String? = null,
@@ -52,9 +56,9 @@ fun AccountInfoScreen(
 ) {
     val context = LocalContext.current
 
-    LaunchedEffect(token) {
+    LaunchedEffect(token, refreshToken) {
         token?.let {
-            Log.d("AccountInfoScreen", "Fetching user info with token: $it")
+            viewModel.initializeTokens(token, refreshToken)
             viewModel.fetchUserInfo(it)
         }
     }
@@ -62,7 +66,78 @@ fun AccountInfoScreen(
     val userFirstName by viewModel.userFirstName
     val userLastName by viewModel.userLastName
     val userEmail by viewModel.userEmail
-    val userPassword by viewModel.userPassword
+    val isEditing by viewModel.isEditing
+
+    var showModalEmail by remember { mutableStateOf(false) }
+    var newEmail by remember { mutableStateOf("") }
+
+    var showModalPassword by remember { mutableStateOf(false) }
+    var newPassword by remember { mutableStateOf("") }
+
+    if (showModalEmail) {
+        AlertDialog(
+            onDismissRequest = { showModalEmail = false },
+            title = { Text("Modifier l'email") },
+            text = {
+                Column {
+                    TextField(
+                        value = newEmail,
+                        onValueChange = { newEmail = it },
+                        label = { Text("Nouvel email") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.updateEmail(newEmail, context, onLogoutClick)
+                        showModalEmail = false
+                    }
+                ) {
+                    Text("Enregistrer")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showModalEmail = false }) {
+                    Text("Annuler")
+                }
+            }
+        )
+    }
+
+    if (showModalPassword) {
+        AlertDialog(
+            onDismissRequest = { showModalPassword = false },
+            title = { Text("Modifier le mot de passe") },
+            text = {
+                Column {
+                    TextField(
+                        value = newPassword,
+                        onValueChange = { newPassword = it },
+                        label = { Text("Nouveau mot de passe") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.updatePassword(newPassword, context, onLogoutClick)
+                        showModalPassword = false
+                    }
+                ) {
+                    Text("Enregistrer")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showModalPassword = false }) {
+                    Text("Annuler")
+                }
+            }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -127,12 +202,15 @@ fun AccountInfoScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Button(
-                        onClick = onEditInfoClick,
+                        onClick = {
+                            onEditInfoClick()
+                            viewModel.toggleEditMode()
+                        },
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF9C27B0)),
                         shape = RoundedCornerShape(25.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(text = "Modifier mes informations", color = Color.White)
+                        Text(text = if (isEditing) "Annuler" else "Modifier mes informations", color = Color.White)
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -145,18 +223,20 @@ fun AccountInfoScreen(
                             Icon(Icons.Default.Email, contentDescription = null)
                         },
                         colors = TextFieldDefaults.textFieldColors(
-                            backgroundColor = Color.White,
-                            focusedIndicatorColor = Color.Transparent,
+                            backgroundColor = if (isEditing) Color.LightGray else Color.White,
+                            focusedIndicatorColor = if (isEditing) Color.Blue else Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(enabled = isEditing) { showModalEmail = true },
                         enabled = false
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     TextField(
-                        value = userPassword,
+                        value = "",
                         onValueChange = {},
                         label = { Text("Mot de passe") },
                         leadingIcon = {
@@ -164,11 +244,13 @@ fun AccountInfoScreen(
                         },
                         visualTransformation = PasswordVisualTransformation(),
                         colors = TextFieldDefaults.textFieldColors(
-                            backgroundColor = Color.White,
-                            focusedIndicatorColor = Color.Transparent,
+                            backgroundColor = if (isEditing) Color.LightGray else Color.White,
+                            focusedIndicatorColor = if (isEditing) Color.Blue else Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(enabled = isEditing) { showModalPassword = true },
                         enabled = false
                     )
 
@@ -197,7 +279,6 @@ fun AccountInfoScreen(
                                         onLogoutClick()
                                     },
                                     onError = {
-                                        // Gérer l'erreur
                                         Log.e("AccountInfoScreen", "Failed to logout")
                                     }
                                 )
@@ -225,5 +306,3 @@ fun AccountInfoScreen(
         }
     }
 }
-
-
