@@ -31,6 +31,8 @@ import com.example.projet42_androidapp.screens.AccountScreen
 import com.example.projet42_androidapp.screens.EventsScreen
 import com.example.projet42_androidapp.screens.HelpScreen
 import com.example.projet42_androidapp.screens.HomeScreen
+import com.example.projet42_androidapp.screens.LoginScreen
+import com.example.projet42_androidapp.screens.RegisterScreen
 import com.example.projet42_androidapp.ui.theme.Projet42AndroidAppTheme
 import com.example.projet42_androidapp.utils.AuthConfig
 import com.example.projet42_androidapp.utils.CustomConnectionBuilder
@@ -171,6 +173,23 @@ fun NavHostContainer(navController: NavHostController, modifier: Modifier = Modi
             val accountViewModel: AccountViewModel = viewModel()
             AccountScreen(viewModel = accountViewModel, context = context)
         }
+        composable("login") {
+            LoginScreen(context = context, onLoginSuccess = { token ->
+                navController.navigate("account/$token")
+            }, onRegisterClick = {
+                navController.navigate("register")
+            })
+        }
+        composable("register") {
+            RegisterScreen(
+                onRegisterClick = {
+                    navController.navigate("login")
+                },
+                onLoginClick = {
+                    navController.navigate("login")
+                }
+            )
+        }
         composable("account/{token}/{refreshToken}") { backStackEntry ->
             val token = backStackEntry.arguments?.getString("token")
             val refreshToken = backStackEntry.arguments?.getString("refreshToken")
@@ -189,6 +208,7 @@ fun NavHostContainer(navController: NavHostController, modifier: Modifier = Modi
         }
     }
 }
+
 
 sealed class BottomNavItem(var title: String, var icon: Int, var route: String) {
     object Home : BottomNavItem("Home", R.drawable.baseline_home_24, "home")

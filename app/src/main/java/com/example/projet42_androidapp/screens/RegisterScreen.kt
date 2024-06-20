@@ -16,14 +16,18 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projet42_androidapp.R
+import com.example.projet42_androidapp.viewmodel.AccountViewModel
 
 @Composable
-fun RegisterScreen(onRegisterClick: () -> Unit, onLoginClick: () -> Unit) {
+fun RegisterScreen(onRegisterClick: () -> Unit, onLoginClick: () -> Unit, accountViewModel: AccountViewModel = viewModel()) {
+    var username by remember { mutableStateOf("") }
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -50,6 +54,23 @@ fun RegisterScreen(onRegisterClick: () -> Unit, onLoginClick: () -> Unit) {
                     .padding(16.dp)
             ) {
                 Column {
+                    TextField(
+                        value = username,
+                        onValueChange = { username = it },
+                        label = { Text("Nom d'utilisateur") },
+                        leadingIcon = {
+                            Icon(painter = painterResource(id = R.drawable.baseline_person_24), contentDescription = null)
+                        },
+                        colors = TextFieldDefaults.textFieldColors(
+                            backgroundColor = Color.White,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     TextField(
                         value = firstName,
                         onValueChange = { firstName = it },
@@ -121,7 +142,13 @@ fun RegisterScreen(onRegisterClick: () -> Unit, onLoginClick: () -> Unit) {
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
-                        onClick = onRegisterClick,
+                        onClick = {
+                            accountViewModel.register(username, firstName, lastName, email, password, {
+                                onLoginClick()  // Redirige vers l'écran de connexion après une inscription réussie
+                            }, {
+                                errorMessage = it
+                            })
+                        },
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF9C27B0)),
                         shape = RoundedCornerShape(25.dp),
                         modifier = Modifier.fillMaxWidth()
@@ -131,6 +158,9 @@ fun RegisterScreen(onRegisterClick: () -> Unit, onLoginClick: () -> Unit) {
 
                     Spacer(modifier = Modifier.height(18.dp))
 
+                    errorMessage?.let {
+                        Text(text = it, color = Color.Red, fontSize = 12.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
+                    }
 
                     Text(text = "Déjà un compte ?", color = Color.Gray, fontSize = 12.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
 

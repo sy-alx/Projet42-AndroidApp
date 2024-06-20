@@ -36,6 +36,59 @@ class AccountViewModel : ViewModel() {
         isEditing.value = !isEditing.value
     }
 
+    fun register(username: String, firstName: String, lastName: String, email: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        val url = "http://192.168.1.29:8080/api/user/register"
+        val client = OkHttpClient()
+
+        val jsonBody = JSONObject()
+        jsonBody.put("username", username)
+        jsonBody.put("firstName", firstName)
+        jsonBody.put("lastName", lastName)
+        jsonBody.put("email", email)
+        jsonBody.put("password", password)
+
+        val requestBody = RequestBody.create(
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
+            jsonBody.toString()
+        )
+
+        val request = Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                e.printStackTrace()
+                onError(e.message ?: "An unknown error occurred")
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                if (!response.isSuccessful) {
+                    onError("Unsuccessful response: ${response.code}")
+                    return
+                }
+
+                response.body?.let {
+                    val jsonResponse = it.string()
+                    try {
+                        val jsonObject = JSONObject(jsonResponse)
+                        val message = jsonObject.optString("message", "Unknown error")
+                        if (message.contains("successfully")) {
+                            onSuccess()
+                        } else {
+                            onError(message)
+                        }
+                    } catch (e: JSONException) {
+                        onError("JSON parsing error: ${e.message}")
+                    }
+                } ?: run {
+                    onError("Response body is null")
+                }
+            }
+        })
+    }
+
     fun updateEmail(newEmail: String, context: Context, onLogoutClick: () -> Unit) {
         authToken?.let { token ->
             val url = "http://192.168.1.29:8080/api/user/email"
