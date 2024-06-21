@@ -79,15 +79,15 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
-    implementation("androidx.compose.material:material:1.6.7")
+    implementation(libs.androidx.material.v168)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
 
-    implementation ("net.openid:appauth:0.10.0")
-    implementation ("com.google.code.gson:gson:2.8.6")
-    implementation ("com.squareup.okhttp3:okhttp:4.9.3")
-    implementation ("com.auth0:java-jwt:4.4.0")
-    implementation ("com.nimbusds:nimbus-jose-jwt:9.15")
+    implementation (libs.appauth)
+    implementation (libs.gson)
+    implementation (libs.okhttp)
+    implementation (libs.java.jwt)
+    implementation (libs.nimbus.jose.jwt)
 
 
     testImplementation(libs.junit)
