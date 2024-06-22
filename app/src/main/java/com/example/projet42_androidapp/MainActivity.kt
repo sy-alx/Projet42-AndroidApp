@@ -28,6 +28,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.projet42_androidapp.screens.AccountInfoScreen
 import com.example.projet42_androidapp.screens.AccountScreen
+import com.example.projet42_androidapp.screens.EventDetailsScreen
 import com.example.projet42_androidapp.screens.EventsScreen
 import com.example.projet42_androidapp.screens.HelpScreen
 import com.example.projet42_androidapp.screens.HomeScreen
@@ -167,7 +168,7 @@ fun BottomNavigationBar(navController: NavHostController) {
 fun NavHostContainer(navController: NavHostController, modifier: Modifier = Modifier, context: MainActivity) {
     NavHost(navController, startDestination = BottomNavItem.Home.route, modifier = modifier) {
         composable(BottomNavItem.Home.route) { HomeScreen() }
-        composable(BottomNavItem.Events.route) { EventsScreen() }
+        composable(BottomNavItem.Events.route) { EventsScreen(navController = navController) }
         composable(BottomNavItem.Help.route) { HelpScreen() }
         composable(BottomNavItem.Account.route) {
             val accountViewModel: AccountViewModel = viewModel()
@@ -206,8 +207,13 @@ fun NavHostContainer(navController: NavHostController, modifier: Modifier = Modi
                 onViewEventsClick = { /* Ajouter la logique pour visualiser les événements */ }
             )
         }
+        composable("eventDetails/{eventId}") { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId")
+            EventDetailsScreen(eventId = eventId?.toLong() ?: 0, navController = navController)
+        }
     }
 }
+
 
 
 sealed class BottomNavItem(var title: String, var icon: Int, var route: String) {
