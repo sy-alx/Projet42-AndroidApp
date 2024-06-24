@@ -1,6 +1,10 @@
 package com.example.projet42_androidapp.screens
 
+import android.annotation.SuppressLint
+import android.view.MotionEvent
+import android.view.View
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,29 +12,52 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.projet42_androidapp.viewmodel.EventDetailViewModel
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Polyline
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import org.json.JSONObject
+import org.osmdroid.events.DelayedMapListener
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
 
+@SuppressLint("ClickableViewAccessibility")
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun EventDetailsScreen(eventId: Long, navController: NavController) {
     val viewModel: EventDetailViewModel = viewModel()
     val eventDetails by viewModel.eventDetails.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(eventId) {
         viewModel.fetchEventDetails(eventId)
     }
+
+    DisposableEffect(Unit) {
+        val config = Configuration.getInstance()
+        config.load(context, context.getSharedPreferences("osmdroid", 0))
+        onDispose { }
+    }
+
+    var isMapTouched by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -48,7 +75,7 @@ fun EventDetailsScreen(eventId: Long, navController: NavController) {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)
-                    .verticalScroll(rememberScrollState()), // Ajout de verticalScroll
+                    .verticalScroll(rememberScrollState(), enabled = !isMapTouched),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -122,16 +149,101 @@ fun EventDetailsScreen(eventId: Long, navController: NavController) {
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = "Parcours :", color = Color.Black)
-                        Text(
-                            text = details.route,
-                            color = Color.Gray,
+
+                        Card(
                             modifier = Modifier
-                                .background(
-                                    color = Color(0xFFF0F0F0),
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .padding(8.dp)
-                        )
+                                .fillMaxWidth()
+                                .height(300.dp)
+                                .padding(8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F0F0)),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        ) {
+                            var mapView by remember { mutableStateOf<MapView?>(null) }
+
+                            AndroidView(
+                                factory = { ctx ->
+                                    MapView(ctx).apply {
+                                        setTileSource(TileSourceFactory.MAPNIK)
+                                        setMultiTouchControls(true)
+
+                                        val mapController = controller
+                                        mapController.setZoom(15.0)
+
+                                        val jsonObject = JSONObject(details.route)
+                                        val coordinates = jsonObject
+                                            .getJSONArray("features")
+                                            .getJSONObject(0)
+                                            .getJSONObject("geometry")
+                                            .getJSONArray("coordinates")
+
+                                        val geoPoints = ArrayList<GeoPoint>()
+                                        for (i in 0 until coordinates.length()) {
+                                            val coord = coordinates.getJSONArray(i)
+                                            geoPoints.add(GeoPoint(coord.getDouble(1), coord.getDouble(0)))
+                                        }
+
+                                        val polyline = Polyline().apply {
+                                            setPoints(geoPoints)
+                                            outlinePaint.color = android.graphics.Color.RED
+                                            outlinePaint.strokeWidth = 5f
+                                        }
+
+                                        overlays.add(polyline)
+                                        val locationOverlay = MyLocationNewOverlay(this)
+                                        locationOverlay.enableMyLocation()
+                                        overlays.add(locationOverlay)
+
+                                        if (geoPoints.isNotEmpty()) {
+                                            mapController.setCenter(geoPoints[0])
+                                        }
+
+                                        mapView = this
+
+                                        var isDragging = false
+
+                                        val mapListener = object : MapListener {
+                                            override fun onScroll(event: ScrollEvent?): Boolean {
+                                                isDragging = true
+                                                return true
+                                            }
+
+                                            override fun onZoom(event: ZoomEvent?): Boolean {
+                                                return false
+                                            }
+                                        }
+
+                                        this.setMapListener(DelayedMapListener(mapListener))
+
+                                        this.setOnTouchListener { v, event ->
+                                            if (event.action == MotionEvent.ACTION_UP) {
+                                                if (isDragging) {
+                                                    isDragging = false
+                                                    isMapTouched = false
+                                                }
+                                            } else if (event.action == MotionEvent.ACTION_DOWN) {
+                                                isMapTouched = true
+                                            }
+                                            false
+                                        }
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .pointerInteropFilter { event ->
+                                        when (event.action) {
+                                            MotionEvent.ACTION_DOWN -> {
+                                                isMapTouched = true
+                                            }
+                                            MotionEvent.ACTION_UP -> {
+                                                isMapTouched = false
+                                            }
+                                        }
+                                        mapView?.onTouchEvent(event) ?: false
+                                    }
+                            )
+                        }
+
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = "Date :", color = Color.Black)
                         Text(
