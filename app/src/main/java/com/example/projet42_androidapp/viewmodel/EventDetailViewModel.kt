@@ -19,7 +19,7 @@ class EventDetailViewModel : ViewModel() {
             try {
                 val client = OkHttpClient()
                 val request = Request.Builder()
-                    .url("http://172.20.10.4:8080/api/events/eventDetails/$eventId")
+                    .url("http://192.168.1.29:8080/api/events/eventDetails/$eventId")
                     .build()
 
                 val response = client.newCall(request).execute()

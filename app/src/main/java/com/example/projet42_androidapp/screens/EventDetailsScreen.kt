@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.projet42_androidapp.viewmodel.AccountViewModel
 import com.example.projet42_androidapp.viewmodel.EventDetailViewModel
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -42,7 +43,7 @@ import org.osmdroid.events.ZoomEvent
 @SuppressLint("ClickableViewAccessibility")
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun EventDetailsScreen(eventId: Long, navController: NavController) {
+fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewModel: AccountViewModel) {
     val viewModel: EventDetailViewModel = viewModel()
     val eventDetails by viewModel.eventDetails.collectAsState()
     val context = LocalContext.current
@@ -280,6 +281,16 @@ fun EventDetailsScreen(eventId: Long, navController: NavController) {
                                 )
                                 .padding(8.dp)
                         )
+                        if (accountViewModel.isUserLoggedIn.value) {
+                            Button(
+                                onClick = { /* Do something when user is logged in */ },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
+                                shape = RoundedCornerShape(25.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(text = "Exclusive Button", color = Color.White)
+                            }
+                        }
                     }
                 }
             }

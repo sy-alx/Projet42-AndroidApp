@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
@@ -48,6 +49,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var authService: AuthorizationService
     private lateinit var navController: NavHostController
 
+    private val accountViewModel: AccountViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -64,11 +67,10 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colors.background
                 ) {
                     navController = rememberNavController()
-                    MainScreen(context = this, navController = navController)
+                    MainScreen(context = this, navController = navController, accountViewModel = accountViewModel)
                 }
             }
         }
-
     }
 
     // Inside your MainActivity or wherever you are using VerifyTokenTask
@@ -101,6 +103,7 @@ class MainActivity : ComponentActivity() {
                             VerifyTokenTask(token) { isTokenValid, validatedToken ->
                                 if (isTokenValid) {
                                     Log.d("AuthToken", "Token is valid: $validatedToken")
+                                    accountViewModel.initializeTokens(accessToken, refreshToken)
                                     navController.navigate("account/${accessToken}/${refreshToken}")
                                 } else {
                                     Log.e("AuthToken", "Invalid token signature")
@@ -117,18 +120,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
     companion object {
         const val RC_AUTH = 100
     }
 }
 
+
 @Composable
-fun MainScreen(context: MainActivity, navController: NavHostController) {
+fun MainScreen(context: MainActivity, navController: NavHostController, accountViewModel: AccountViewModel) {
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
-        NavHostContainer(navController = navController, modifier = Modifier.padding(innerPadding), context = context)
+        NavHostContainer(navController = navController, modifier = Modifier.padding(innerPadding), context = context, accountViewModel = accountViewModel)
     }
 }
 
@@ -165,13 +168,12 @@ fun BottomNavigationBar(navController: NavHostController) {
 }
 
 @Composable
-fun NavHostContainer(navController: NavHostController, modifier: Modifier = Modifier, context: MainActivity) {
+fun NavHostContainer(navController: NavHostController, modifier: Modifier = Modifier, context: MainActivity, accountViewModel: AccountViewModel) {
     NavHost(navController, startDestination = BottomNavItem.Home.route, modifier = modifier) {
         composable(BottomNavItem.Home.route) { HomeScreen() }
-        composable(BottomNavItem.Events.route) { EventsScreen(navController = navController) }
+        composable(BottomNavItem.Events.route) { EventsScreen(navController = navController, accountViewModel = accountViewModel) }
         composable(BottomNavItem.Help.route) { HelpScreen() }
         composable(BottomNavItem.Account.route) {
-            val accountViewModel: AccountViewModel = viewModel()
             AccountScreen(viewModel = accountViewModel, context = context)
         }
         composable("login") {
@@ -197,6 +199,7 @@ fun NavHostContainer(navController: NavHostController, modifier: Modifier = Modi
             AccountInfoScreen(
                 token = token,
                 refreshToken = refreshToken,
+                viewModel = accountViewModel,
                 onDeleteAccountClick = { /* Ajouter la logique pour supprimer le compte */ },
                 onEditInfoClick = { /* Ajouter la logique pour éditer les infos */ },
                 onLogoutClick = {
@@ -209,7 +212,7 @@ fun NavHostContainer(navController: NavHostController, modifier: Modifier = Modi
         }
         composable("eventDetails/{eventId}") { backStackEntry ->
             val eventId = backStackEntry.arguments?.getString("eventId")
-            EventDetailsScreen(eventId = eventId?.toLong() ?: 0, navController = navController)
+            EventDetailsScreen(eventId = eventId?.toLong() ?: 0, navController = navController, accountViewModel = accountViewModel)
         }
     }
 }
@@ -223,8 +226,3 @@ sealed class BottomNavItem(var title: String, var icon: Int, var route: String) 
     object Account : BottomNavItem("Account", R.drawable.baseline_person_24, "account")
 }
 
-@Preview
-@Composable
-fun MainScreenPreview() {
-    MainScreen(context = MainActivity(), navController = rememberNavController())
-}
