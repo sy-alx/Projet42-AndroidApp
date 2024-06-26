@@ -49,8 +49,15 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
     val eventDetails by viewModel.eventDetails.collectAsState()
     val context = LocalContext.current
 
+    var isRegistered by remember { mutableStateOf(false) }
+
     LaunchedEffect(eventId) {
         viewModel.fetchEventDetails(eventId)
+        if (accountViewModel.isUserLoggedIn.value) {
+            accountViewModel.isRegisteredToEvent(eventId) { result ->
+                isRegistered = result
+            }
+        }
     }
 
     DisposableEffect(Unit) {
@@ -285,22 +292,37 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
                         if (accountViewModel.isUserLoggedIn.value) {
                             Button(
                                 onClick = {
-                                    accountViewModel.registerToEvent(eventId,
-                                        onSuccess = {
-                                            // Handle success, e.g., show a success message or navigate away
-                                            Log.d("EventDetailsScreen", "Successfully registered")
-                                        },
-                                        onError = { error ->
-                                            // Handle error, e.g., show an error message
-                                            Log.e("EventDetailsScreen", "Error registering: $error")
-                                        }
-                                    )
+                                    if (isRegistered) {
+                                        accountViewModel.unregisterFromEvent(eventId,
+                                            onSuccess = {
+                                                // Handle success, e.g., show a success message or navigate away
+                                                Log.d("EventDetailsScreen", "Successfully unregistered")
+                                                isRegistered = false
+                                            },
+                                            onError = { error ->
+                                                // Handle error, e.g., show an error message
+                                                Log.e("EventDetailsScreen", "Error unregistering: $error")
+                                            }
+                                        )
+                                    } else {
+                                        accountViewModel.registerToEvent(eventId,
+                                            onSuccess = {
+                                                // Handle success, e.g., show a success message or navigate away
+                                                Log.d("EventDetailsScreen", "Successfully registered")
+                                                isRegistered = true
+                                            },
+                                            onError = { error ->
+                                                // Handle error, e.g., show an error message
+                                                Log.e("EventDetailsScreen", "Error registering: $error")
+                                            }
+                                        )
+                                    }
                                 },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
+                                colors = ButtonDefaults.buttonColors(containerColor = if (isRegistered) Color.Red else Color.Blue),
                                 shape = RoundedCornerShape(25.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text(text = "S'inscrire à l'évènement", color = Color.White)
+                                Text(text = if (isRegistered) "Annuler l'inscription" else "S'inscrire à l'évènement", color = Color.White)
                             }
                         }
                     }

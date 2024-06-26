@@ -330,4 +330,63 @@ class AccountViewModel : ViewModel() {
             }
         })
     }
+
+    fun isRegisteredToEvent(eventId: Long, onResult: (Boolean) -> Unit) {
+        val url = "http://192.168.1.29:8080/api/events/$eventId/isRegistered"
+        val client = OkHttpClient()
+
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("Authorization", "Bearer $authToken")
+            .build()
+
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                e.printStackTrace()
+                onResult(false)
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                if (!response.isSuccessful) {
+                    onResult(false)
+                    return
+                }
+
+                response.body?.let {
+                    val isRegistered = it.string().toBoolean()
+                    onResult(isRegistered)
+                } ?: run {
+                    onResult(false)
+                }
+            }
+        })
+    }
+
+    fun unregisterFromEvent(eventId: Long, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        val url = "http://192.168.1.29:8080/api/events/$eventId/unregister"
+        val client = OkHttpClient()
+
+        val request = Request.Builder()
+            .url(url)
+            .delete()
+            .addHeader("Authorization", "Bearer $authToken")
+            .build()
+
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                e.printStackTrace()
+                onError(e.message ?: "An unknown error occurred")
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                if (!response.isSuccessful) {
+                    onError("Unsuccessful response: ${response.code}")
+                    return
+                }
+
+                onSuccess()
+            }
+        })
+    }
+
 }
