@@ -288,4 +288,46 @@ class AccountViewModel : ViewModel() {
             }
         })
     }
+
+    fun registerToEvent(eventId: Long, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        val url = "http://192.168.1.29:8080/api/events/$eventId/register"
+        val client = OkHttpClient()
+
+        val request = Request.Builder()
+            .url(url)
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), ""))
+            .addHeader("Authorization", "Bearer $authToken") // Ensure authToken is not null
+            .build()
+
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                e.printStackTrace()
+                onError(e.message ?: "An unknown error occurred")
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                if (!response.isSuccessful) {
+                    onError("Unsuccessful response: ${response.code}")
+                    return
+                }
+
+                response.body?.let {
+                    val jsonResponse = it.string()
+                    try {
+                        val jsonObject = JSONObject(jsonResponse)
+                        val message = jsonObject.optString("message", "Unknown error")
+                        if (response.isSuccessful) {
+                            onSuccess()
+                        } else {
+                            onError(message)
+                        }
+                    } catch (e: JSONException) {
+                        onError("JSON parsing error: ${e.message}")
+                    }
+                } ?: run {
+                    onError("Response body is null")
+                }
+            }
+        })
+    }
 }

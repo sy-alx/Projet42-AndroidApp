@@ -1,6 +1,7 @@
 package com.example.projet42_androidapp.screens
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.compose.foundation.background
@@ -283,12 +284,23 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
                         )
                         if (accountViewModel.isUserLoggedIn.value) {
                             Button(
-                                onClick = { /* Do something when user is logged in */ },
+                                onClick = {
+                                    accountViewModel.registerToEvent(eventId,
+                                        onSuccess = {
+                                            // Handle success, e.g., show a success message or navigate away
+                                            Log.d("EventDetailsScreen", "Successfully registered")
+                                        },
+                                        onError = { error ->
+                                            // Handle error, e.g., show an error message
+                                            Log.e("EventDetailsScreen", "Error registering: $error")
+                                        }
+                                    )
+                                },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
                                 shape = RoundedCornerShape(25.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text(text = "Exclusive Button", color = Color.White)
+                                Text(text = "S'inscrire à l'évènement", color = Color.White)
                             }
                         }
                     }
@@ -299,3 +311,4 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
         }
     }
 }
+
