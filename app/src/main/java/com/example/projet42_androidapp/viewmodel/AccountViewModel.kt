@@ -4,6 +4,8 @@ import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.auth0.jwt.JWT
+import com.auth0.jwt.interfaces.DecodedJWT
 import com.example.projet42_androidapp.utils.AuthConfig
 import okhttp3.Call
 import okhttp3.Callback
@@ -18,6 +20,8 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
+import kotlin.math.log
+
 
 class AccountViewModel : ViewModel() {
     var isUserLoggedIn = mutableStateOf(false)
@@ -29,11 +33,34 @@ class AccountViewModel : ViewModel() {
     var isEditing = mutableStateOf(false)
     private var authToken: String? = null
     var refreshToken: String? = null
+    var isAdmin = mutableStateOf(false)
 
     fun initializeTokens(token: String?, refreshToken: String?) {
         this.authToken = token
         this.refreshToken = refreshToken
         isUserLoggedIn.value = token != null
+        checkIfAdmin()
+
+    }
+
+    private fun checkIfAdmin() {
+        authToken?.let { token ->
+            try {
+                val jwt: DecodedJWT = JWT.decode(token)
+                val resourceAccessClaim = jwt.getClaim("resource_access").asMap()
+                Log.d("AccountViewModel", "resource_access claim: $resourceAccessClaim")
+
+                val projet42Api = resourceAccessClaim["projet42-api"] as? Map<*, *>
+                val roles = projet42Api?.get("roles") as? List<*>
+
+                isAdmin.value = roles?.contains("ADMIN") ?: false
+
+                Log.d("AccountViewModel", "Roles extracted: $roles")
+            } catch (e: Exception) {
+                Log.e("AccountViewModel", "Error decoding JWT: ${e.message}")
+                isAdmin.value = false
+            }
+        }
     }
 
     fun toggleEditMode() {
@@ -41,7 +68,7 @@ class AccountViewModel : ViewModel() {
     }
 
     fun register(username: String, firstName: String, lastName: String, email: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
-        val url = "http://172.20.10.4:8080/api/user/register"
+        val url = "http://192.168.1.29:8080/api/user/register"
         val client = OkHttpClient()
 
         val jsonBody = JSONObject()
@@ -95,7 +122,7 @@ class AccountViewModel : ViewModel() {
 
     fun updateEmail(newEmail: String, context: Context, onLogoutClick: () -> Unit) {
         authToken?.let { token ->
-            val url = "http://172.20.10.4:8080/api/user/email"
+            val url = "http://192.168.1.29:8080/api/user/email"
             val client = OkHttpClient()
 
             val jsonBody = JSONObject()
@@ -169,7 +196,7 @@ class AccountViewModel : ViewModel() {
 
     fun updatePassword(newPassword: String, context: Context, onLogoutClick: () -> Unit) {
         authToken?.let { token ->
-            val url = "http://172.20.10.4:8080/api/user/password"
+            val url = "http://192.168.1.29:8080/api/user/password"
             val client = OkHttpClient()
 
             val jsonBody = JSONObject()
@@ -243,7 +270,7 @@ class AccountViewModel : ViewModel() {
 
     fun fetchUserInfo(token: String) {
         authToken = token
-        val url = "http://172.20.10.4:8080/api/user"
+        val url = "http://192.168.1.29:8080/api/user"
 
         val client = OkHttpClient()
         val request = Request.Builder()
@@ -294,7 +321,7 @@ class AccountViewModel : ViewModel() {
 
     fun registerToEvent(eventId: Long, file: File, onSuccess: () -> Unit, onError: (String) -> Unit) {
         authToken?.let { token ->
-            val url = "http://172.20.10.4:8080/api/events/$eventId/register"
+            val url = "http://192.168.1.29:8080/api/events/$eventId/register"
             val client = OkHttpClient()
 
             val requestBody = MultipartBody.Builder()
@@ -329,7 +356,7 @@ class AccountViewModel : ViewModel() {
 
     fun isRegisteredToEvent(eventId: Long, onResult: (Boolean) -> Unit) {
         authToken?.let { token ->
-            val url = "http://172.20.10.4:8080/api/events/$eventId/isRegistered"
+            val url = "http://192.168.1.29:8080/api/events/$eventId/isRegistered"
             val client = OkHttpClient()
 
             val request = Request.Builder()
@@ -361,7 +388,7 @@ class AccountViewModel : ViewModel() {
 
     fun unregisterFromEvent(eventId: Long, onSuccess: () -> Unit, onError: (String) -> Unit) {
         authToken?.let { token ->
-            val url = "http://172.20.10.4:8080/api/events/$eventId/unregister"
+            val url = "http://192.168.1.29:8080/api/events/$eventId/unregister"
             val client = OkHttpClient()
 
             val request = Request.Builder()

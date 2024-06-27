@@ -315,6 +315,19 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
                             ) {
                                 Text(text = if (isRegistered) "Annuler l'inscription" else "S'inscrire à l'évènement", color = Color.White)
                             }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            if (accountViewModel.isAdmin.value) {
+                                Button(
+                                    onClick = { /* Action pour éditer l'évènement */ },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
+                                    shape = RoundedCornerShape(25.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(text = "Editer", color = Color.White)
+                                }
+                            }
                         }
 
                         if (showConfirmationDialog) {
@@ -416,5 +429,6 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
         }
     }
 }
+
 
 
