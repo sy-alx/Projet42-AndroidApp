@@ -1,9 +1,12 @@
 package com.example.projet42_androidapp.screens
 
 import android.annotation.SuppressLint
+import android.net.Uri
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
@@ -40,6 +43,7 @@ import org.osmdroid.events.DelayedMapListener
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
 import org.osmdroid.events.ZoomEvent
+import java.io.File
 
 @SuppressLint("ClickableViewAccessibility")
 @OptIn(ExperimentalComposeUiApi::class)
@@ -51,6 +55,12 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
 
     var isRegistered by remember { mutableStateOf(false) }
     var showConfirmationDialog by remember { mutableStateOf(false) }
+    var showFileDialog by remember { mutableStateOf(false) }
+    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
+
+    val pickPdfLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        selectedFileUri = uri
+    }
 
     LaunchedEffect(eventId) {
         viewModel.fetchEventDetails(eventId)
@@ -296,17 +306,7 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
                                     if (isRegistered) {
                                         showConfirmationDialog = true
                                     } else {
-                                        accountViewModel.registerToEvent(eventId,
-                                            onSuccess = {
-                                                // Handle success, e.g., show a success message or navigate away
-                                                Log.d("EventDetailsScreen", "Successfully registered")
-                                                isRegistered = true
-                                            },
-                                            onError = { error ->
-                                                // Handle error, e.g., show an error message
-                                                Log.e("EventDetailsScreen", "Error registering: $error")
-                                            }
-                                        )
+                                        showFileDialog = true
                                     }
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = if (isRegistered) Color.Red else Color.Blue),
@@ -321,19 +321,18 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
                             AlertDialog(
                                 onDismissRequest = { showConfirmationDialog = false },
                                 title = { Text("Confirmation") },
-                                text = { Text("Voulez-vous vraiment annuler votre inscription ?") },
+                                text = { Text("Êtes-vous sûr de vouloir annuler votre inscription ?") },
                                 confirmButton = {
                                     Button(
                                         onClick = {
-                                            accountViewModel.unregisterFromEvent(eventId,
+                                            accountViewModel.unregisterFromEvent(
+                                                eventId = eventId,
                                                 onSuccess = {
-                                                    // Handle success, e.g., show a success message or navigate away
                                                     Log.d("EventDetailsScreen", "Successfully unregistered")
                                                     isRegistered = false
                                                     showConfirmationDialog = false
                                                 },
                                                 onError = { error ->
-                                                    // Handle error, e.g., show an error message
                                                     Log.e("EventDetailsScreen", "Error unregistering: $error")
                                                     showConfirmationDialog = false
                                                 }
@@ -348,6 +347,63 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
                                         onClick = { showConfirmationDialog = false }
                                     ) {
                                         Text("Non")
+                                    }
+                                }
+                            )
+                        }
+
+                        if (showFileDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showFileDialog = false },
+                                title = { Text("Déposer un fichier") },
+                                text = {
+                                    Column {
+                                        Button(
+                                            onClick = { pickPdfLauncher.launch("application/pdf") }
+                                        ) {
+                                            Text("Choisir un fichier PDF")
+                                        }
+                                        selectedFileUri?.let { uri ->
+                                            Text("Fichier sélectionné : ${uri.path}")
+                                        }
+                                    }
+                                },
+                                confirmButton = {
+                                    Button(
+                                        onClick = {
+                                            selectedFileUri?.let { uri ->
+                                                val fileName = "${accountViewModel.userLastName.value}_${accountViewModel.userFirstName.value}_$eventId.pdf"
+                                                val inputStream = context.contentResolver.openInputStream(uri)
+                                                val file = File(context.cacheDir, fileName)
+                                                inputStream?.use { input ->
+                                                    file.outputStream().use { output ->
+                                                        input.copyTo(output)
+                                                    }
+                                                }
+                                                accountViewModel.registerToEvent(
+                                                    eventId = eventId,
+                                                    file = file,
+                                                    onSuccess = {
+                                                        Log.d("EventDetailsScreen", "Successfully registered")
+                                                        isRegistered = true
+                                                        showFileDialog = false
+                                                    },
+                                                    onError = { error ->
+                                                        Log.e("EventDetailsScreen", "Error registering: $error")
+                                                        showFileDialog = false
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    ) {
+                                        Text("Valider l'inscription")
+                                    }
+                                },
+                                dismissButton = {
+                                    Button(
+                                        onClick = { showFileDialog = false }
+                                    ) {
+                                        Text("Annuler")
                                     }
                                 }
                             )

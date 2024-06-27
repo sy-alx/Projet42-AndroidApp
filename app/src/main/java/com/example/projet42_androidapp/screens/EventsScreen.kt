@@ -8,11 +8,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -28,7 +32,7 @@ import com.example.projet42_androidapp.viewmodels.EventSummaryViewModel
 @Composable
 fun EventsScreen(viewModel: EventSummaryViewModel = viewModel(), navController: NavController, accountViewModel: AccountViewModel) {
     val events by viewModel.events.collectAsState()
-    val isUserLoggedIn = remember { accountViewModel.isUserLoggedIn }
+    val isUserLoggedIn by accountViewModel.isUserLoggedIn
 
     Box(
         modifier = Modifier
@@ -56,16 +60,25 @@ fun EventsScreen(viewModel: EventSummaryViewModel = viewModel(), navController: 
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(events) { event ->
-                    EventCard(event, onClick = { navController.navigate("eventDetails/${event.id}") }, isUserLoggedIn = isUserLoggedIn.value)
+                    var isRegistered by remember { mutableStateOf(false) }
+
+                    if (isUserLoggedIn) {
+                        LaunchedEffect(event.id) {
+                            accountViewModel.isRegisteredToEvent(event.id) { result ->
+                                isRegistered = result
+                            }
+                        }
+                    }
+
+                    EventCard(event, onClick = { navController.navigate("eventDetails/${event.id}") }, isRegistered = isRegistered)
                 }
             }
         }
     }
 }
 
-
 @Composable
-fun EventCard(event: EventSummaryViewModel.EventSummary, onClick: () -> Unit, isUserLoggedIn: Boolean) {
+fun EventCard(event: EventSummaryViewModel.EventSummary, onClick: () -> Unit, isRegistered: Boolean) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -93,9 +106,11 @@ fun EventCard(event: EventSummaryViewModel.EventSummary, onClick: () -> Unit, is
             ) {
                 Text(text = "Heure: ${event.eventTime}", color = Color.Gray, modifier = Modifier.weight(1f))
                 Icon(Icons.Filled.ArrowForward, contentDescription = "Arrow Forward", tint = Color.Gray)
+                if (isRegistered) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(Icons.Filled.CheckCircle, contentDescription = "Registered", tint = Color.Green)
+                }
             }
-
-
         }
     }
 }

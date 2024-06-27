@@ -8,12 +8,15 @@ import com.example.projet42_androidapp.utils.AuthConfig
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.Response
 import org.json.JSONException
 import org.json.JSONObject
+import java.io.File
 import java.io.IOException
 
 class AccountViewModel : ViewModel() {
@@ -289,104 +292,101 @@ class AccountViewModel : ViewModel() {
         })
     }
 
-    fun registerToEvent(eventId: Long, onSuccess: () -> Unit, onError: (String) -> Unit) {
-        val url = "http://172.20.10.4:8080/api/events/$eventId/register"
-        val client = OkHttpClient()
+    fun registerToEvent(eventId: Long, file: File, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        authToken?.let { token ->
+            val url = "http://172.20.10.4:8080/api/events/$eventId/register"
+            val client = OkHttpClient()
 
-        val request = Request.Builder()
-            .url(url)
-            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), ""))
-            .addHeader("Authorization", "Bearer $authToken") // Ensure authToken is not null
-            .build()
+            val requestBody = MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", file.name, file.asRequestBody("application/pdf".toMediaTypeOrNull()))
+                .build()
 
-        client.newCall(request).enqueue(object : okhttp3.Callback {
-            override fun onFailure(call: okhttp3.Call, e: IOException) {
-                e.printStackTrace()
-                onError(e.message ?: "An unknown error occurred")
-            }
+            val request = Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .addHeader("Authorization", "Bearer $token")
+                .build()
 
-            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
-                if (!response.isSuccessful) {
-                    onError("Unsuccessful response: ${response.code}")
-                    return
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    e.printStackTrace()
+                    onError(e.message ?: "An unknown error occurred")
                 }
 
-                response.body?.let {
-                    val jsonResponse = it.string()
-                    try {
-                        val jsonObject = JSONObject(jsonResponse)
-                        val message = jsonObject.optString("message", "Unknown error")
-                        if (response.isSuccessful) {
-                            onSuccess()
-                        } else {
-                            onError(message)
-                        }
-                    } catch (e: JSONException) {
-                        onError("JSON parsing error: ${e.message}")
+                override fun onResponse(call: Call, response: Response) {
+                    if (!response.isSuccessful) {
+                        onError("Unsuccessful response: ${response.code}")
+                        return
                     }
-                } ?: run {
-                    onError("Response body is null")
+                    onSuccess()
                 }
-            }
-        })
+            })
+        } ?: run {
+            onError("User is not authenticated")
+        }
     }
 
     fun isRegisteredToEvent(eventId: Long, onResult: (Boolean) -> Unit) {
-        val url = "http://172.20.10.4:8080/api/events/$eventId/isRegistered"
-        val client = OkHttpClient()
+        authToken?.let { token ->
+            val url = "http://172.20.10.4:8080/api/events/$eventId/isRegistered"
+            val client = OkHttpClient()
 
-        val request = Request.Builder()
-            .url(url)
-            .addHeader("Authorization", "Bearer $authToken")
-            .build()
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .addHeader("Authorization", "Bearer $token")
+                .build()
 
-        client.newCall(request).enqueue(object : okhttp3.Callback {
-            override fun onFailure(call: okhttp3.Call, e: IOException) {
-                e.printStackTrace()
-                onResult(false)
-            }
-
-            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
-                if (!response.isSuccessful) {
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    e.printStackTrace()
                     onResult(false)
-                    return
                 }
 
-                response.body?.let {
-                    val isRegistered = it.string().toBoolean()
+                override fun onResponse(call: Call, response: Response) {
+                    if (!response.isSuccessful) {
+                        onResult(false)
+                        return
+                    }
+
+                    val isRegistered = response.body?.string()?.toBoolean() ?: false
                     onResult(isRegistered)
-                } ?: run {
-                    onResult(false)
                 }
-            }
-        })
+            })
+        } ?: run {
+            onResult(false)
+        }
     }
 
     fun unregisterFromEvent(eventId: Long, onSuccess: () -> Unit, onError: (String) -> Unit) {
-        val url = "http://172.20.10.4:8080/api/events/$eventId/unregister"
-        val client = OkHttpClient()
+        authToken?.let { token ->
+            val url = "http://172.20.10.4:8080/api/events/$eventId/unregister"
+            val client = OkHttpClient()
 
-        val request = Request.Builder()
-            .url(url)
-            .delete()
-            .addHeader("Authorization", "Bearer $authToken")
-            .build()
+            val request = Request.Builder()
+                .url(url)
+                .delete()
+                .addHeader("Authorization", "Bearer $token")
+                .build()
 
-        client.newCall(request).enqueue(object : okhttp3.Callback {
-            override fun onFailure(call: okhttp3.Call, e: IOException) {
-                e.printStackTrace()
-                onError(e.message ?: "An unknown error occurred")
-            }
-
-            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
-                if (!response.isSuccessful) {
-                    onError("Unsuccessful response: ${response.code}")
-                    return
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    e.printStackTrace()
+                    onError(e.message ?: "An unknown error occurred")
                 }
 
-                onSuccess()
-            }
-        })
+                override fun onResponse(call: Call, response: Response) {
+                    if (!response.isSuccessful) {
+                        onError("Unsuccessful response: ${response.code}")
+                        return
+                    }
+                    onSuccess()
+                }
+            })
+        } ?: run {
+            onError("User is not authenticated")
+        }
     }
 
 }
