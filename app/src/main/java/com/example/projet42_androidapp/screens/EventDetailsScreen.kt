@@ -50,6 +50,7 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
     val context = LocalContext.current
 
     var isRegistered by remember { mutableStateOf(false) }
+    var showConfirmationDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(eventId) {
         viewModel.fetchEventDetails(eventId)
@@ -293,17 +294,7 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
                             Button(
                                 onClick = {
                                     if (isRegistered) {
-                                        accountViewModel.unregisterFromEvent(eventId,
-                                            onSuccess = {
-                                                // Handle success, e.g., show a success message or navigate away
-                                                Log.d("EventDetailsScreen", "Successfully unregistered")
-                                                isRegistered = false
-                                            },
-                                            onError = { error ->
-                                                // Handle error, e.g., show an error message
-                                                Log.e("EventDetailsScreen", "Error unregistering: $error")
-                                            }
-                                        )
+                                        showConfirmationDialog = true
                                     } else {
                                         accountViewModel.registerToEvent(eventId,
                                             onSuccess = {
@@ -325,6 +316,42 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
                                 Text(text = if (isRegistered) "Annuler l'inscription" else "S'inscrire à l'évènement", color = Color.White)
                             }
                         }
+
+                        if (showConfirmationDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showConfirmationDialog = false },
+                                title = { Text("Confirmation") },
+                                text = { Text("Voulez-vous vraiment annuler votre inscription ?") },
+                                confirmButton = {
+                                    Button(
+                                        onClick = {
+                                            accountViewModel.unregisterFromEvent(eventId,
+                                                onSuccess = {
+                                                    // Handle success, e.g., show a success message or navigate away
+                                                    Log.d("EventDetailsScreen", "Successfully unregistered")
+                                                    isRegistered = false
+                                                    showConfirmationDialog = false
+                                                },
+                                                onError = { error ->
+                                                    // Handle error, e.g., show an error message
+                                                    Log.e("EventDetailsScreen", "Error unregistering: $error")
+                                                    showConfirmationDialog = false
+                                                }
+                                            )
+                                        }
+                                    ) {
+                                        Text("Oui")
+                                    }
+                                },
+                                dismissButton = {
+                                    Button(
+                                        onClick = { showConfirmationDialog = false }
+                                    ) {
+                                        Text("Non")
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -333,4 +360,5 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
         }
     }
 }
+
 
