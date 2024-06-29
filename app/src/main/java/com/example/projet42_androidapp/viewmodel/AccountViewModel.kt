@@ -43,6 +43,10 @@ class AccountViewModel : ViewModel() {
 
     }
 
+    fun getAuthToken(): String? {
+        return authToken
+    }
+
     private fun checkIfAdmin() {
         authToken?.let { token ->
             try {

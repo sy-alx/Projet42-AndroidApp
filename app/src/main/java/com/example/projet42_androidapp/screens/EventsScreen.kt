@@ -1,11 +1,10 @@
 package com.example.projet42_androidapp.screens
 
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CheckCircle
@@ -28,11 +27,23 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.projet42_androidapp.viewmodel.AccountViewModel
 import com.example.projet42_androidapp.viewmodels.EventSummaryViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun EventsScreen(viewModel: EventSummaryViewModel = viewModel(), navController: NavController, accountViewModel: AccountViewModel) {
     val events by viewModel.events.collectAsState()
     val isUserLoggedIn by accountViewModel.isUserLoggedIn
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchEvents()
+    }
+
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+    val upcomingEvents = remember(events) { events.filter { it.status == "A venir" }.sortedBy { dateFormat.parse(it.eventDate) } }
+    val finishedEvents = remember(events) { events.filter { it.status == "Terminé" }.sortedBy { dateFormat.parse(it.eventDate) } }
+    val cancelledEvents = remember(events) { events.filter { it.status == "Annulé" }.sortedBy { dateFormat.parse(it.eventDate) } }
 
     Box(
         modifier = Modifier
@@ -59,20 +70,46 @@ fun EventsScreen(viewModel: EventSummaryViewModel = viewModel(), navController: 
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(events) { event ->
-                    var isRegistered by remember { mutableStateOf(false) }
-
-                    if (isUserLoggedIn) {
-                        LaunchedEffect(event.id) {
-                            accountViewModel.isRegisteredToEvent(event.id) { result ->
-                                isRegistered = result
-                            }
-                        }
-                    }
-
-                    EventCard(event, onClick = { navController.navigate("eventDetails/${event.id}") }, isRegistered = isRegistered)
+                item {
+                    EventSection("A venir", upcomingEvents, navController, accountViewModel, isUserLoggedIn)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    EventSection("Terminé", finishedEvents, navController, accountViewModel, isUserLoggedIn)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    EventSection("Annulé", cancelledEvents, navController, accountViewModel, isUserLoggedIn)
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun EventSection(
+    title: String,
+    events: List<EventSummaryViewModel.EventSummary>,
+    navController: NavController,
+    accountViewModel: AccountViewModel,
+    isUserLoggedIn: Boolean
+) {
+    Column {
+        Text(
+            text = title,
+            fontSize = 20.sp,
+            color = Color.White,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+        events.forEach { event ->
+            var isRegistered by remember { mutableStateOf(false) }
+
+            if (isUserLoggedIn) {
+                LaunchedEffect(event.id) {
+                    accountViewModel.isRegisteredToEvent(event.id) { result ->
+                        isRegistered = result
+                    }
+                }
+            }
+
+            EventCard(event, onClick = { navController.navigate("eventDetails/${event.id}") }, isRegistered = isRegistered)
+            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }

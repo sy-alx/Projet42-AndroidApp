@@ -2,12 +2,15 @@ package com.example.projet42_androidapp.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.projet42_androidapp.viewmodels.EventSummaryViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 
 class EventDetailViewModel : ViewModel() {
@@ -50,6 +53,78 @@ class EventDetailViewModel : ViewModel() {
         }
     }
 
+    fun updateEventDate(eventId: Long, newDate: String, token: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val client = OkHttpClient()
+                val json = JSONObject().put("eventDate", newDate)
+                val requestBody = json.toString().toRequestBody("application/json".toMediaTypeOrNull())
+                val request = Request.Builder()
+                    .url("http://192.168.1.29:8080/api/events/$eventId/updateEventDate")
+                    .patch(requestBody)
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+
+                val response = client.newCall(request).execute()
+                if (response.isSuccessful) {
+                    onSuccess()
+                } else {
+                    onError(response.message)
+                }
+            } catch (e: Exception) {
+                onError(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    fun updateEventTime(eventId: Long, newTime: String, token: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val client = OkHttpClient()
+                val json = JSONObject().put("eventTime", newTime)
+                val requestBody = json.toString().toRequestBody("application/json".toMediaTypeOrNull())
+                val request = Request.Builder()
+                    .url("http://192.168.1.29:8080/api/events/$eventId/updateEventTime")
+                    .patch(requestBody)
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+
+                val response = client.newCall(request).execute()
+                if (response.isSuccessful) {
+                    onSuccess()
+                } else {
+                    onError(response.message)
+                }
+            } catch (e: Exception) {
+                onError(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    fun updateEventStatus(eventId: Long, newStatusId: Long, token: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val client = OkHttpClient()
+                val json = JSONObject().put("statusId", newStatusId)
+                val requestBody = json.toString().toRequestBody("application/json".toMediaTypeOrNull())
+                val request = Request.Builder()
+                    .url("http://192.168.1.29:8080/api/events/$eventId/updateEventStatus")
+                    .patch(requestBody)
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+
+                val response = client.newCall(request).execute()
+                if (response.isSuccessful) {
+                    onSuccess()
+                } else {
+                    onError(response.message)
+                }
+            } catch (e: Exception) {
+                onError(e.message ?: "Unknown error")
+            }
+        }
+    }
+
     data class EventDetails(
         val id: Long,
         val name: String,
@@ -62,3 +137,4 @@ class EventDetailViewModel : ViewModel() {
         val sports: List<String>
     )
 }
+

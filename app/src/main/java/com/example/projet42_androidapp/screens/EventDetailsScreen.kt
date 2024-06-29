@@ -4,11 +4,10 @@ import android.annotation.SuppressLint
 import android.net.Uri
 import android.util.Log
 import android.view.MotionEvent
-import android.view.View
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,6 +56,7 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
     var showConfirmationDialog by remember { mutableStateOf(false) }
     var showFileDialog by remember { mutableStateOf(false) }
     var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
+    var isEditing by remember { mutableStateOf(false) }
 
     val pickPdfLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         selectedFileUri = uri
@@ -78,6 +78,20 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
     }
 
     var isMapTouched by remember { mutableStateOf(false) }
+    var showDateDialog by remember { mutableStateOf(false) }
+    var showTimeDialog by remember { mutableStateOf(false) }
+    var showStatusDialog by remember { mutableStateOf(false) }
+    var editDate by remember { mutableStateOf("") }
+    var editTime by remember { mutableStateOf("") }
+    var selectedStatus by remember { mutableStateOf(1L) }
+
+    // Initialize editDate and editTime when isEditing changes to true
+    LaunchedEffect(isEditing) {
+        if (isEditing) {
+            editDate = eventDetails?.eventDate ?: ""
+            editTime = eventDetails?.eventTime ?: ""
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -267,27 +281,37 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = "Date :", color = Color.Black)
                         Text(
-                            text = details.eventDate,
+                            text = if (isEditing) editDate else details.eventDate,
                             color = Color.Gray,
                             modifier = Modifier
                                 .background(
-                                    color = Color(0xFFF0F0F0),
+                                    color = if (isEditing) Color(0xFFe2a7ec) else Color(0xFFF0F0F0),
                                     shape = RoundedCornerShape(8.dp)
                                 )
                                 .padding(8.dp)
+                                .clickable(enabled = isEditing) {
+                                    showDateDialog = true
+                                    editDate = details.eventDate
+                                }
                         )
+
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = "Heure :", color = Color.Black)
                         Text(
-                            text = details.eventTime,
+                            text = if (isEditing) editTime else details.eventTime,
                             color = Color.Gray,
                             modifier = Modifier
                                 .background(
-                                    color = Color(0xFFF0F0F0),
+                                    color = if (isEditing) Color(0xFFe2a7ec) else Color(0xFFF0F0F0),
                                     shape = RoundedCornerShape(8.dp)
                                 )
                                 .padding(8.dp)
+                                .clickable(enabled = isEditing) {
+                                    showTimeDialog = true
+                                    editTime = details.eventTime
+                                }
                         )
+
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = "Statut :", color = Color.Black)
                         Text(
@@ -295,12 +319,18 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
                             color = Color.Gray,
                             modifier = Modifier
                                 .background(
-                                    color = Color(0xFFF0F0F0),
+                                    color = if (isEditing) Color(0xFFe2a7ec) else Color(0xFFF0F0F0),
                                     shape = RoundedCornerShape(8.dp)
                                 )
                                 .padding(8.dp)
+                                .clickable(enabled = isEditing) { showStatusDialog = true }
                         )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
                         if (accountViewModel.isUserLoggedIn.value) {
+                            // Check if the event is "Terminé" or "Annulé"
+                            val isEventFinishedOrCancelled = details.status == "Terminé" || details.status == "Annulé"
                             Button(
                                 onClick = {
                                     if (isRegistered) {
@@ -309,23 +339,27 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
                                         showFileDialog = true
                                     }
                                 },
+                                enabled = !isEventFinishedOrCancelled,
                                 colors = ButtonDefaults.buttonColors(containerColor = if (isRegistered) Color.Red else Color.Blue),
                                 shape = RoundedCornerShape(25.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text(text = if (isRegistered) "Annuler l'inscription" else "S'inscrire à l'évènement", color = Color.White)
+                                Text(
+                                    text = if (isEventFinishedOrCancelled) "Inscription impossible" else if (isRegistered) "Annuler l'inscription" else "S'inscrire à l'évènement",
+                                    color = Color.White
+                                )
                             }
 
                             Spacer(modifier = Modifier.height(8.dp))
 
                             if (accountViewModel.isAdmin.value) {
                                 Button(
-                                    onClick = { /* Action pour éditer l'évènement */ },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
+                                    onClick = { isEditing = !isEditing },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9C27B0)),
                                     shape = RoundedCornerShape(25.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text(text = "Editer", color = Color.White)
+                                    Text(text = if (isEditing) "Annuler" else "Editer", color = Color.White)
                                 }
                             }
                         }
@@ -421,6 +455,150 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
                                 }
                             )
                         }
+
+                        if (showDateDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showDateDialog = false },
+                                title = { Text("Modifier la Date") },
+                                text = {
+                                    Column {
+                                        OutlinedTextField(
+                                            value = editDate,
+                                            onValueChange = { newValue -> editDate = newValue },
+                                            label = { Text("Date") },
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+                                },
+                                confirmButton = {
+                                    Button(
+                                        onClick = {
+                                            accountViewModel.getAuthToken()?.let { token ->
+                                                viewModel.updateEventDate(eventId, editDate, token, {
+                                                    showDateDialog = false
+                                                    viewModel.fetchEventDetails(eventId)
+                                                }, { error ->
+                                                    Log.e("EventDetailsScreen", "Error updating date: $error")
+                                                })
+                                            }
+                                        }
+                                    ) {
+                                        Text("Enregistrer")
+                                    }
+                                },
+                                dismissButton = {
+                                    Button(
+                                        onClick = { showDateDialog = false }
+                                    ) {
+                                        Text("Annuler")
+                                    }
+                                }
+                            )
+                        }
+
+                        if (showTimeDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showTimeDialog = false },
+                                title = { Text("Modifier l'Heure") },
+                                text = {
+                                    Column {
+                                        OutlinedTextField(
+                                            value = editTime,
+                                            onValueChange = { newValue -> editTime = newValue },
+                                            label = { Text("Heure") },
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+                                },
+                                confirmButton = {
+                                    Button(
+                                        onClick = {
+                                            accountViewModel.getAuthToken()?.let { token ->
+                                                viewModel.updateEventTime(eventId, editTime, token, {
+                                                    showTimeDialog = false
+                                                    viewModel.fetchEventDetails(eventId)
+                                                }, { error ->
+                                                    Log.e("EventDetailsScreen", "Error updating time: $error")
+                                                })
+                                            }
+                                        }
+                                    ) {
+                                        Text("Enregistrer")
+                                    }
+                                },
+                                dismissButton = {
+                                    Button(
+                                        onClick = { showTimeDialog = false }
+                                    ) {
+                                        Text("Annuler")
+                                    }
+                                }
+                            )
+                        }
+
+                        if (showStatusDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showStatusDialog = false },
+                                title = { Text("Modifier le Statut") },
+                                text = {
+                                    Column {
+                                        var expanded by remember { mutableStateOf(false) }
+                                        Button(onClick = { expanded = true }) {
+                                            Text("Sélectionner un statut")
+                                        }
+                                        DropdownMenu(
+                                            expanded = expanded,
+                                            onDismissRequest = { expanded = false }
+                                        ) {
+                                            DropdownMenuItem(
+                                                text = { Text("A venir") },
+                                                onClick = {
+                                                    selectedStatus = 1L
+                                                    expanded = false
+                                                }
+                                            )
+                                            DropdownMenuItem(
+                                                text = { Text("Annulé") },
+                                                onClick = {
+                                                    selectedStatus = 2L
+                                                    expanded = false
+                                                }
+                                            )
+                                            DropdownMenuItem(
+                                                text = { Text("Terminé") },
+                                                onClick = {
+                                                    selectedStatus = 3L
+                                                    expanded = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                },
+                                confirmButton = {
+                                    Button(
+                                        onClick = {
+                                            accountViewModel.getAuthToken()?.let { token ->
+                                                viewModel.updateEventStatus(eventId, selectedStatus, token, {
+                                                    showStatusDialog = false
+                                                    viewModel.fetchEventDetails(eventId)
+                                                }, { error ->
+                                                    Log.e("EventDetailsScreen", "Error updating status: $error")
+                                                })
+                                            }
+                                        }
+                                    ) {
+                                        Text("Enregistrer")
+                                    }
+                                },
+                                dismissButton = {
+                                    Button(
+                                        onClick = { showStatusDialog = false }
+                                    ) {
+                                        Text("Annuler")
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -429,6 +607,13 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
         }
     }
 }
+
+
+
+
+
+
+
 
 
 

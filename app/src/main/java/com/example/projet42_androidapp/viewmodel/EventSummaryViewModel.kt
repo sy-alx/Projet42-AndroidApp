@@ -5,8 +5,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -28,11 +30,13 @@ class EventSummaryViewModel : ViewModel() {
     private val _events = MutableStateFlow<List<EventSummary>>(emptyList())
     val events: StateFlow<List<EventSummary>> = _events
 
+
+
     init {
         fetchEvents()
     }
 
-    private fun fetchEvents() {
+    fun fetchEvents() {
         viewModelScope.launch(Dispatchers.IO) {
             val client = OkHttpClient()
 
@@ -81,4 +85,6 @@ class EventSummaryViewModel : ViewModel() {
             })
         }
     }
+
+
 }
