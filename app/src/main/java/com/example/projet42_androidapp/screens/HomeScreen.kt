@@ -71,7 +71,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = viewMode
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            HeaderSection()
+            HeaderSection(navController = navController)
             Spacer(modifier = Modifier.height(16.dp))
             Spacer(modifier = Modifier.weight(1f))
             Box(
@@ -111,13 +111,13 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = viewMode
 }
 
 @Composable
-fun HeaderSection() {
+fun HeaderSection(navController: NavController) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = { /* TODO: Handle QR Code click */ }) {
+        IconButton(onClick = { navController.navigate("qrCode") }) {
             Icon(
                 imageVector = Icons.Default.QrCode,
                 contentDescription = "QR Code",

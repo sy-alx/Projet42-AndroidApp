@@ -1,6 +1,7 @@
 package com.example.projet42_androidapp.viewmodel
 
 import android.content.Context
+import android.util.Base64
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -34,13 +35,14 @@ class AccountViewModel : ViewModel() {
     private var authToken: String? = null
     var refreshToken: String? = null
     var isAdmin = mutableStateOf(false)
+    var userSub = mutableStateOf<String?>(null)
 
     fun initializeTokens(token: String?, refreshToken: String?) {
         this.authToken = token
         this.refreshToken = refreshToken
         isUserLoggedIn.value = token != null
         checkIfAdmin()
-
+        extractUserSub()
     }
 
     fun getAuthToken(): String? {
@@ -66,6 +68,22 @@ class AccountViewModel : ViewModel() {
             }
         }
     }
+
+    private fun extractUserSub() {
+        authToken?.let {
+            try {
+                val parts = it.split(".")
+                if (parts.size == 3) {
+                    val payload = String(Base64.decode(parts[1], Base64.URL_SAFE))
+                    val json = JSONObject(payload)
+                    userSub.value = json.getString("sub")
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
 
     fun toggleEditMode() {
         isEditing.value = !isEditing.value

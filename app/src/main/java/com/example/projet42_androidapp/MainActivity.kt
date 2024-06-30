@@ -34,6 +34,7 @@ import com.example.projet42_androidapp.screens.EventsScreen
 import com.example.projet42_androidapp.screens.HelpScreen
 import com.example.projet42_androidapp.screens.HomeScreen
 import com.example.projet42_androidapp.screens.LoginScreen
+import com.example.projet42_androidapp.screens.QrCodeScreen
 import com.example.projet42_androidapp.screens.RegisterScreen
 import com.example.projet42_androidapp.ui.theme.Projet42AndroidAppTheme
 import com.example.projet42_androidapp.utils.AuthConfig
@@ -213,6 +214,9 @@ fun NavHostContainer(navController: NavHostController, modifier: Modifier = Modi
         composable("eventDetails/{eventId}") { backStackEntry ->
             val eventId = backStackEntry.arguments?.getString("eventId")
             EventDetailsScreen(eventId = eventId?.toLong() ?: 0, navController = navController, accountViewModel = accountViewModel)
+        }
+        composable("qrCode") {
+            QrCodeScreen(navController = navController, accountViewModel = accountViewModel)
         }
     }
 }
