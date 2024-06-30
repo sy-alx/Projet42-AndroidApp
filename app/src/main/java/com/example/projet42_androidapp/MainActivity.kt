@@ -170,7 +170,7 @@ fun BottomNavigationBar(navController: NavHostController) {
 @Composable
 fun NavHostContainer(navController: NavHostController, modifier: Modifier = Modifier, context: MainActivity, accountViewModel: AccountViewModel) {
     NavHost(navController, startDestination = BottomNavItem.Home.route, modifier = modifier) {
-        composable(BottomNavItem.Home.route) { HomeScreen() }
+        composable(BottomNavItem.Home.route) { HomeScreen(navController = navController, accountViewModel = accountViewModel) }
         composable(BottomNavItem.Events.route) { EventsScreen(navController = navController, accountViewModel = accountViewModel) }
         composable(BottomNavItem.Help.route) { HelpScreen() }
         composable(BottomNavItem.Account.route) {
