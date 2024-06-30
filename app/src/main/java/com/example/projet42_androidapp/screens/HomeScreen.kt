@@ -40,16 +40,20 @@ import com.example.projet42_androidapp.viewmodel.AccountViewModel
 fun HomeScreen(navController: NavController, viewModel: HomeViewModel = viewModel(), accountViewModel: AccountViewModel) {
     val nearestEvent by viewModel.nearestEvent.collectAsState()
     val isRegistered by viewModel.isRegistered.collectAsState()
-
-    LaunchedEffect(nearestEvent) {
-        Log.d("HomeScreen", "LaunchedEffect: nearestEvent = $nearestEvent")
-        nearestEvent?.let {
-            viewModel.checkIfUserIsRegistered(it.id, accountViewModel)
-        }
-    }
+    val isUserLoggedIn by accountViewModel.isUserLoggedIn
 
     LaunchedEffect(Unit) {
         viewModel.fetchNearestEvent()
+    }
+
+    LaunchedEffect(nearestEvent, isUserLoggedIn) {
+        nearestEvent?.let {
+            if (isUserLoggedIn) {
+                viewModel.checkIfUserIsRegistered(it.id, accountViewModel)
+            } else {
+                viewModel.setRegistered(false)
+            }
+        }
     }
 
     Box(
@@ -71,7 +75,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = viewMode
             Spacer(modifier = Modifier.height(16.dp))
             Spacer(modifier = Modifier.weight(1f))
             Box(
-                modifier = Modifier.fillMaxSize() // or any other modifier you want for the Box
+                modifier = Modifier.fillMaxSize()
             ) {
                 Box(
                     modifier = Modifier.align(Alignment.BottomCenter)

@@ -43,7 +43,7 @@ class HomeViewModel : ViewModel() {
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace() // Log the error or handle it as necessary
+                e.printStackTrace()
                 Log.e("HomeViewModel", "Error fetching nearest event: ${e.message}")
             }
         }
@@ -54,6 +54,10 @@ class HomeViewModel : ViewModel() {
             _isRegistered.value = isRegistered
             Log.d("HomeViewModel", "User registration status for event $eventId: $isRegistered")
         }
+    }
+
+    fun setRegistered(isRegistered: Boolean) {
+        _isRegistered.value = isRegistered
     }
 
     data class EventSummary(
