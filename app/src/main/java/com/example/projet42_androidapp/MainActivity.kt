@@ -1,8 +1,10 @@
 package com.example.projet42_androidapp
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -27,6 +29,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.projet42_androidapp.Activity.QRCodeScannerActivity
 import com.example.projet42_androidapp.screens.AccountInfoScreen
 import com.example.projet42_androidapp.screens.AccountScreen
 import com.example.projet42_androidapp.screens.EventDetailsScreen
@@ -70,6 +73,20 @@ class MainActivity : ComponentActivity() {
                     navController = rememberNavController()
                     MainScreen(context = this, navController = navController, accountViewModel = accountViewModel)
                 }
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 0) {
+            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                // Permission granted, launch the scanner
+                val intent = Intent(this, QRCodeScannerActivity::class.java)
+                startActivityForResult(intent, QRCodeScannerActivity.REQUEST_CODE_SCAN)
+            } else {
+                // Permission denied, show a message to the user
+                Toast.makeText(this, "Camera permission is required to scan QR codes", Toast.LENGTH_LONG).show()
             }
         }
     }
