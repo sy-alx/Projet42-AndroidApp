@@ -38,6 +38,7 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import org.json.JSONObject
+import com.example.projet42_androidapp.R
 import org.osmdroid.events.DelayedMapListener
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
@@ -205,32 +206,52 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
                                         mapController.setZoom(15.0)
 
                                         val jsonObject = JSONObject(details.route)
-                                        val coordinates = jsonObject
-                                            .getJSONArray("features")
-                                            .getJSONObject(0)
-                                            .getJSONObject("geometry")
-                                            .getJSONArray("coordinates")
+                                        val features = jsonObject.getJSONArray("features")
 
                                         val geoPoints = ArrayList<GeoPoint>()
-                                        for (i in 0 until coordinates.length()) {
-                                            val coord = coordinates.getJSONArray(i)
-                                            geoPoints.add(GeoPoint(coord.getDouble(1), coord.getDouble(0)))
+
+                                        for (i in 0 until features.length()) {
+                                            val feature = features.getJSONObject(i)
+                                            val geometry = feature.getJSONObject("geometry")
+                                            val geometryType = geometry.getString("type")
+
+                                            when (geometryType) {
+                                                "LineString" -> {
+                                                    val coordinates = geometry.getJSONArray("coordinates")
+                                                    for (j in 0 until coordinates.length()) {
+                                                        val coord = coordinates.getJSONArray(j)
+                                                        geoPoints.add(GeoPoint(coord.getDouble(1), coord.getDouble(0)))
+                                                    }
+                                                    val polyline = Polyline().apply {
+                                                        setPoints(geoPoints)
+                                                        outlinePaint.color = android.graphics.Color.RED
+                                                        outlinePaint.strokeWidth = 5f
+                                                    }
+                                                    overlays.add(polyline)
+                                                    if (geoPoints.isNotEmpty()) {
+                                                        mapController.setCenter(geoPoints[0])
+                                                    }
+                                                }
+                                                "Point" -> {
+                                                    val coordinates = geometry.getJSONArray("coordinates")
+                                                    val geoPoint = GeoPoint(coordinates.getDouble(1), coordinates.getDouble(0))
+                                                    val marker = org.osmdroid.views.overlay.Marker(this).apply {
+                                                        position = geoPoint
+                                                        setAnchor(org.osmdroid.views.overlay.Marker.ANCHOR_CENTER, org.osmdroid.views.overlay.Marker.ANCHOR_BOTTOM)
+                                                        icon = ctx.getDrawable(R.drawable.ic_marker)
+                                                    }
+                                                    overlays.add(marker)
+                                                    mapController.setCenter(geoPoint)
+                                                }
+                                                else -> {
+                                                    // Handle other geometry types if needed
+                                                }
+                                            }
                                         }
 
-                                        val polyline = Polyline().apply {
-                                            setPoints(geoPoints)
-                                            outlinePaint.color = android.graphics.Color.RED
-                                            outlinePaint.strokeWidth = 5f
-                                        }
-
-                                        overlays.add(polyline)
                                         val locationOverlay = MyLocationNewOverlay(this)
                                         locationOverlay.enableMyLocation()
                                         overlays.add(locationOverlay)
-
-                                        if (geoPoints.isNotEmpty()) {
-                                            mapController.setCenter(geoPoints[0])
-                                        }
 
                                         mapView = this
 
@@ -607,6 +628,8 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
         }
     }
 }
+
+
 
 
 
