@@ -127,10 +127,15 @@ fun QrCodeScreen(
                     color = Color.White,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
-                Button(onClick = { navController.popBackStack() }) {
-                    Text(text = "Revenir à la page précédente")
+                androidx.compose.material3.Button(
+                    onClick = { navController.popBackStack() },
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFF9C27B0)),
+                    shape = RoundedCornerShape(50)
+                ) {
+                    Text(text = "Revenir à l'accueil", color = Color.White)
                 }
             }
+
         }
     } else {
         Box(
@@ -142,14 +147,14 @@ fun QrCodeScreen(
                         tileMode = TileMode.Clamp
                     )
                 )
-                .padding(16.dp)
+                .padding(8.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -195,18 +200,17 @@ fun QrCodeScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (isAdmin) {
-                    Button(onClick = { showEventListDialog = true }) {
-                        Text(text = "Afficher les événements à venir")
-                    }
-
                     selectedEvent?.let { event ->
                         Text(
                             text = "Événement sélectionné : ${event.name}",
                             fontSize = 14.sp,
                             color = Color.White,
                         )
+                    }
 
-                        Button(onClick = {
+                    EventActionsCard(
+                        onShowEvents = { showEventListDialog = true },
+                        onScanQrCode = {
                             if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
                                 != PackageManager.PERMISSION_GRANTED
                             ) {
@@ -219,10 +223,9 @@ fun QrCodeScreen(
                                 val intent = Intent(context, QRCodeScannerActivity::class.java)
                                 scannerLauncher.launch(intent)
                             }
-                        }) {
-                            Text(text = "Scanner les QR codes")
-                        }
-                    }
+                        },
+                        selectedEvent = selectedEvent
+                    )
                 }
             }
 
@@ -241,12 +244,61 @@ fun QrCodeScreen(
 }
 
 @Composable
+fun EventActionsCard(
+    onShowEvents: () -> Unit,
+    onScanQrCode: () -> Unit,
+    selectedEvent: EventSummaryViewModel.EventSummary?
+) {
+    androidx.compose.material3.Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.White),
+        elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            androidx.compose.material3.Button(
+                onClick = onShowEvents,
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFF9C27B0)),
+                shape = RoundedCornerShape(50)
+            ) {
+                Text(
+                    text = "Afficher les événements à venir",
+                    color = Color.White
+                )
+            }
+
+            if (selectedEvent != null) {
+                androidx.compose.material3.Button(
+                    onClick = onScanQrCode,
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFF9C27B0)),
+                    shape = RoundedCornerShape(50)
+                ) {
+                    Text(
+                        text = "Scanner les QR codes",
+                        color = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun EventListDialog(
     events: List<EventSummaryViewModel.EventSummary>,
     onDismiss: () -> Unit,
     onEventSelected: (EventSummaryViewModel.EventSummary) -> Unit
 ) {
-    val sortedEvents = events.sortedBy { it.eventDate }
+    val upcomingEvents = events.filter { it.status == "A venir" }
+    val sortedEvents = upcomingEvents.sortedBy { it.eventDate }
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = { Text(text = "Évènements à venir") },
@@ -264,12 +316,17 @@ fun EventListDialog(
             }
         },
         confirmButton = {
-            Button(onClick = { onDismiss() }) {
-                Text(text = "Fermer")
+            androidx.compose.material3.Button(
+                onClick = { onDismiss() },
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFF9C27B0)),
+                shape = RoundedCornerShape(50)
+            ) {
+                Text(text = "Fermer", color = Color.White)
             }
         }
     )
 }
+
 
 @Composable
 fun EventCard(event: EventSummaryViewModel.EventSummary, onClick: () -> Unit) {
@@ -299,7 +356,6 @@ fun EventCard(event: EventSummaryViewModel.EventSummary, onClick: () -> Unit) {
         }
     }
 }
-
 
 @Composable
 fun ShowPopupMessage(
@@ -332,9 +388,21 @@ fun ShowPopupMessage(
             }
         },
         confirmButton = {
-            Button(onClick = { onDismiss() }) {
-                Text("OK")
+            androidx.compose.material3.Button(
+                onClick = { onDismiss() },
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFF9C27B0)),
+                shape = RoundedCornerShape(50)
+            ) {
+                Text(
+                    text = "OK",
+                    color = Color.White
+                )
             }
         }
     )
 }
+
+
+
+
+
