@@ -91,14 +91,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // Inside your MainActivity or wherever you are using VerifyTokenTask
-    private fun startAuthorization() {
-        val authRequest = AuthConfig.createAuthRequest(this)
-        val authService = AuthConfig.createAuthService(this)
-
-        val intent = authService.getAuthorizationRequestIntent(authRequest)
-        startActivityForResult(intent, RC_AUTH)
-    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
