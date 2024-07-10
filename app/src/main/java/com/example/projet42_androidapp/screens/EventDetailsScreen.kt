@@ -86,7 +86,7 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
     var editTime by remember { mutableStateOf("") }
     var selectedStatus by remember { mutableStateOf(1L) }
 
-    // Initialize editDate and editTime when isEditing changes to true
+
     LaunchedEffect(isEditing) {
         if (isEditing) {
             editDate = eventDetails?.eventDate ?: ""
@@ -244,7 +244,7 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
                                                     mapController.setCenter(geoPoint)
                                                 }
                                                 else -> {
-                                                    // Handle other geometry types if needed
+
                                                 }
                                             }
                                         }
@@ -350,7 +350,7 @@ fun EventDetailsScreen(eventId: Long, navController: NavController, accountViewM
                         Spacer(modifier = Modifier.height(8.dp))
 
                         if (accountViewModel.isUserLoggedIn.value) {
-                            // Check if the event is "Terminé" or "Annulé"
+
                             val isEventFinishedOrCancelled = details.status == "Terminé" || details.status == "Annulé"
                             Button(
                                 onClick = {
