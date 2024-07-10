@@ -33,7 +33,7 @@ class QrCodeViewModel : ViewModel() {
     fun checkUserRegistration(eventId: Long, userId: String, token: String, callback: (Boolean) -> Unit) {
         val client = OkHttpClient()
         val request = Request.Builder()
-            .url("http://172.16.1.201:31486/api/events/checkRegistration?eventId=$eventId&userId=$userId")
+            .url("http://projet42.alxor.fr/api/events/checkRegistration?eventId=$eventId&userId=$userId")
             .addHeader("Authorization", "Bearer $token")
             .build()
 

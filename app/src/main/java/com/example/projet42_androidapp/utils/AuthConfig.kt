@@ -17,8 +17,8 @@ import okhttp3.Response
 import java.io.IOException
 
 object AuthConfig {
-    private const val AUTH_ENDPOINT = "http://172.16.1.201:30248/realms/projet42-realm/protocol/openid-connect/auth"
-    private const val TOKEN_ENDPOINT = "http://172.16.1.201:30248/realms/projet42-realm/protocol/openid-connect/token"
+    private const val AUTH_ENDPOINT = "http://keycloakprojet42.alxor.fr/realms/projet42-realm/protocol/openid-connect/auth"
+    private const val TOKEN_ENDPOINT = "http://keycloakprojet42.alxor.fr/realms/projet42-realm/protocol/openid-connect/token"
     private const val CLIENT_ID = "projet42-api"
     private const val CLIENT_SECRET = "UjttrpYWQb78I0wVtlxTc3bHJnDM0zqc"
     private const val REDIRECT_URI = "projet42://callback"
@@ -48,7 +48,7 @@ object AuthConfig {
     }
 
     fun logout(context: Context, token: String, refreshToken: String, onSuccess: () -> Unit, onError: () -> Unit) {
-        val url = "http://172.16.1.201:30248/realms/projet42-realm/protocol/openid-connect/logout"
+        val url = "http://keycloakprojet42.alxor.fr/realms/projet42-realm/protocol/openid-connect/logout"
 
         val client = OkHttpClient()
         val body = FormBody.Builder()

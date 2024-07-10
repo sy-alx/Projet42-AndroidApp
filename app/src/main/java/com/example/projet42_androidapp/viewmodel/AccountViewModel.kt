@@ -90,7 +90,7 @@ class AccountViewModel : ViewModel() {
     }
 
     fun register(username: String, firstName: String, lastName: String, email: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
-        val url = "http://172.16.1.201:31486/api/user/register"
+        val url = "http://projet42.alxor.fr/api/user/register"
         val client = OkHttpClient()
 
         val jsonBody = JSONObject()
@@ -144,7 +144,7 @@ class AccountViewModel : ViewModel() {
 
     fun updateEmail(newEmail: String, context: Context, onLogoutClick: () -> Unit) {
         authToken?.let { token ->
-            val url = "http://172.16.1.201:31486/api/user/email"
+            val url = "http://projet42.alxor.fr/api/user/email"
             val client = OkHttpClient()
 
             val jsonBody = JSONObject()
@@ -218,7 +218,7 @@ class AccountViewModel : ViewModel() {
 
     fun updatePassword(newPassword: String, context: Context, onLogoutClick: () -> Unit) {
         authToken?.let { token ->
-            val url = "http://172.16.1.201:31486/api/user/password"
+            val url = "http://projet42.alxor.fr/api/user/password"
             val client = OkHttpClient()
 
             val jsonBody = JSONObject()
@@ -292,7 +292,7 @@ class AccountViewModel : ViewModel() {
 
     fun fetchUserInfo(token: String) {
         authToken = token
-        val url = "http://172.16.1.201:31486/api/user"
+        val url = "http://projet42.alxor.fr/api/user"
 
         val client = OkHttpClient()
         val request = Request.Builder()
@@ -343,7 +343,7 @@ class AccountViewModel : ViewModel() {
 
     fun registerToEvent(eventId: Long, file: File, onSuccess: () -> Unit, onError: (String) -> Unit) {
         authToken?.let { token ->
-            val url = "http://172.16.1.201:31486/api/events/$eventId/register"
+            val url = "http://projet42.alxor.fr/api/events/$eventId/register"
             val client = OkHttpClient()
 
             val requestBody = MultipartBody.Builder()
@@ -378,7 +378,7 @@ class AccountViewModel : ViewModel() {
 
     fun isRegisteredToEvent(eventId: Long, onResult: (Boolean) -> Unit) {
         authToken?.let { token ->
-            val url = "http://172.16.1.201:31486/api/events/$eventId/isRegistered"
+            val url = "http://projet42.alxor.fr/api/events/$eventId/isRegistered"
             val client = OkHttpClient()
 
             val request = Request.Builder()
@@ -410,7 +410,7 @@ class AccountViewModel : ViewModel() {
 
     fun unregisterFromEvent(eventId: Long, onSuccess: () -> Unit, onError: (String) -> Unit) {
         authToken?.let { token ->
-            val url = "http://172.16.1.201:31486/api/events/$eventId/unregister"
+            val url = "http://projet42.alxor.fr/api/events/$eventId/unregister"
             val client = OkHttpClient()
 
             val request = Request.Builder()

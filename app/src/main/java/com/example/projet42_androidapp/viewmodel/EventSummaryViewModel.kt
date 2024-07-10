@@ -41,7 +41,7 @@ class EventSummaryViewModel : ViewModel() {
             val client = OkHttpClient()
 
             val request = Request.Builder()
-                .url("http://172.16.1.201:31486/api/events/eventsSummarize")
+                .url("http://projet42.alxor.fr/api/events/eventsSummarize")
                 .build()
 
             client.newCall(request).enqueue(object : okhttp3.Callback {

@@ -23,7 +23,7 @@ class HomeViewModel : ViewModel() {
             try {
                 val client = OkHttpClient()
                 val request = Request.Builder()
-                    .url("http://172.16.1.201:31486/api/events/nearestUpcomingEvent")
+                    .url("http://projet42.alxor.fr/api/events/nearestUpcomingEvent")
                     .build()
 
                 val response = client.newCall(request).execute()
