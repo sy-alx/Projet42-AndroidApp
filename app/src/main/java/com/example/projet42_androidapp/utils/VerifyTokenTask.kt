@@ -22,7 +22,7 @@ class VerifyTokenTask(
     override fun doInBackground(vararg params: Void?): Boolean {
         return try {
             // URL of the JWKS endpoint
-            val jwkSetURL = URL("http://192.168.1.29:8090/realms/projet42-realm/protocol/openid-connect/certs")
+            val jwkSetURL = URL("http://172.20.10.4:8090/realms/projet42-realm/protocol/openid-connect/certs")
             Log.d("AuthToken", "JWKS URL: $jwkSetURL")
 
             // Setup resource retriever
@@ -80,6 +80,6 @@ class VerifyTokenTask(
         Log.d("AuthToken", "Audience: $audience")
 
         // Validate issuer and audience
-        return issuer == "http://192.168.1.29:8090/realms/projet42-realm" && audience.contains("projet42-api")
+        return issuer == "http://172.20.10.4:8090/realms/projet42-realm" && audience.contains("projet42-api")
     }
 }
